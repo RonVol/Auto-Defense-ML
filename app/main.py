@@ -1,15 +1,17 @@
-from UI.main_ui import run_ui
-from Core import helper
-from Core.controller import Controller
+from .UI.main_ui import UI
+from .Core.main_core import Main_Core
+from .config import supported_libraries, supported_attacks
+from .Controller import Controller
+# imports for ui simulation
+from utils.mnist_xgboost import get_model_path,get_x_test_path,get_y_test_path
 
-
-# Now you can use imports relative to the script_dir
-from Core import controller
 
 if __name__ == "__main__":
-    # run_ui()
-    (x_train, y_train), (x_test, y_test), min_pixel_value, max_pixel_value = helper.get_mnist()
-    classifier = helper.get_mnist_cnn_classifier()
-    controller = Controller(classifier=classifier,x_test=x_test,y_test=y_test)
-    controller.run()
+
+    # create controller for interaction between core and gui
+    core = Main_Core()
+    ui = UI()
+    controller = Controller(core=core,ui=ui)
+    controller.run_ui()
+
     
