@@ -1,9 +1,9 @@
 import dearpygui.dearpygui as dpg
 import dearpygui.demo as demo
 
-
-from config import supported_libraries, supported_attacks
+from ..config import supported_libraries, supported_attacks
 from utils.mnist_xgboost import get_model_path,get_x_test_path,get_y_test_path # for simulated input
+
 class UI():
 
     def __init__(self):
