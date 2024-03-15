@@ -58,6 +58,14 @@ def create_mnist_XGboost():
     np.save(get_y_test_path(), y_test)
     return model
 
+def save_only_tests():
+    (x_train, y_train), (x_test, y_test), min_pixel_value, max_pixel_value = load_mnist()
+    nb_samples_test = x_test.shape[0]
+    x_test = x_test.reshape((nb_samples_test, 28 * 28))
+    np.save(get_x_test_path(), x_test[:10])
+    np.save(get_y_test_path(), y_test[:10])
+
+
 def load_mnist_XGBoost():
     # Load the model
     model_path = get_model_path()
@@ -68,4 +76,5 @@ def load_mnist_XGBoost():
     return model
 
 if __name__ == "__main__":
-    create_mnist_XGboost()
+    #create_mnist_XGboost()
+    save_only_tests()
