@@ -1,14 +1,10 @@
-from .UI.main_ui import UI
-from .Core.main_core import Main_Core
-from .Controller import Controller
-# imports for ui simulation
-from utils.mnist_xgboost import get_model_path,get_x_test_path,get_y_test_path
-
+from app.Core.main_core import Main_Core
+from app.UI.main_ui import Main_UI
+from app.controller import Controller
 
 if __name__ == "__main__":
-
     # create controller for interaction between core and gui
     core = Main_Core()
-    ui = UI()
+    ui = Main_UI()
     controller = Controller(core=core,ui=ui)
     controller.run_ui()
