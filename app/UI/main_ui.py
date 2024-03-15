@@ -23,7 +23,7 @@ class Main_UI():
     def get_simulated_user_input(self):
         chosen_model_file_path = get_model_path()
         chosen_model_library = supported_libraries['XGBoost']
-        chosen_attacks = [supported_attacks['FGSM']] # list of chosen attacks
+        chosen_attacks = [supported_attacks['ZooAttack']] # list of chosen attacks
         chosen_defenses = []
         chosen_x_test = get_x_test_path()
         chosen_y_test = get_y_test_path()

@@ -26,6 +26,7 @@ class Controller:
         attacks = self.get_user_chosen_attacks()
         defenses = self.get_user_chosen_defenses()
         self.core.run_pipeline(dataloader,parameters,attacks,defenses)
+        #print(dataloader.y_test[0])
 
     def get_user_chosen_attacks(self):
         chosen_attacks = self.user_input['chosen_attacks']
