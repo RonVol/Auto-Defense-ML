@@ -11,8 +11,13 @@ supported_libraries = {
 }
 
 supported_attacks = {
-    "FGSM": {
-        "name": "FGSM",
+    "ZooAttack": {
+        "name": "ZooAttack",
+        "max_iter": 10,
+        "learning_rate": 1e-1,
+        "binary_search_steps": 20,
+        "use_resize": False,
+        "variable_h":0.05,
         "applicable_to": ["XGBoost"]
     },
 }
