@@ -13,6 +13,7 @@ supported_libraries = {
 supported_attacks = {
     "ZooAttack": {
         "name": "ZooAttack",
+        "type:":"black-box",
         "max_iter": 10,
         "learning_rate": 1e-1,
         "binary_search_steps": 20,
@@ -20,11 +21,55 @@ supported_attacks = {
         "variable_h":0.05,
         "applicable_to": ["XGBoost"]
     },
+    "HopSkipJump": {
+        "name": "HopSkipJump",
+        "type:":"black-box",
+        "max_iter": 50,
+        "max_eval": 10000,
+        "init_eval": 100,
+        "init_size": 100,
+        "norm":2,
+        "applicable_to": ["XGBoost"]
+    },
+    "SignOPTAttack": { # TODO : self.clip_min not defined, bug in ART ? 
+        "name": "SignOPTAttack",
+        "type:":"black-box",
+        "targeted": False,
+        "epsilon": 0.001,
+        "applicable_to": ["XGBoost"]
+    },
+    "GeoDA": {
+        "name": "GeoDA", # 'XGBoostClassifier' object has no attribute 'channels_first'
+        "type:":"black-box",
+        "max_iter": 4000,
+        "sigma": 0.0002,
+        "bin_search_tol": 0.1,
+        "norm": 2,
+        "applicable_to": ["XGBoost"]
+    },
 }
 
 supported_defenses = {
-    "GaussianNoise": {
-        "description": "Adding Gaussian noise to inputs",
+    "SpatialSmoothing": {
+        "name": "SpatialSmoothing",
+        "window_size": 3,
+        "apply_fit": False,
+        "apply_predict": True,
+        "applicable_to": ["XGBoost"]
+    },
+    "JpegCompression": { # Negative values in input `x` detected. The JPEG compression defence requires unnormalized input.
+        "name": "JpegCompression",
+        "clip_values": (0,1),
+        "quality": 50,
+        "apply_fit": False,
+        "apply_predict": True,
+        "applicable_to": ["XGBoost"]
+    },
+    "ThermometerEncoding": { # need to see what happends to the shape, Found input variables with inconsistent numbers of samples: [10, 100]
+        "name": "ThermometerEncoding",
+        "clip_values": (0,1),
+        "apply_fit": False,
+        "apply_predict": True,
         "applicable_to": ["XGBoost"]
     },
 }

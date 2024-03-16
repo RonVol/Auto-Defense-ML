@@ -1,19 +1,15 @@
-from art.attacks.evasion import ZooAttack
+from art.attacks.evasion import ZooAttack, HopSkipJump, SignOPTAttack, GeoDA
 # Import other attacks as needed
 
 class AttackExecutor:
-    def __init__(self, attack_config, model, x_test, y_test):
+    def __init__(self, attack_config, model):
         self.attack_config = attack_config
         self.model = model
-        self.x_test = x_test
-        self.y_test = y_test
         self.attack = self.initialize_attack()
 
     def initialize_attack(self):
         attack_name = self.attack_config['name']
         if attack_name == 'ZooAttack':
-            # Initialize ZooAttack with parameters from self.attack_config
-            # For demonstration, let's assume 'parameter_x' is a config parameter for ZooAttack
             max_iter = self.attack_config.get('max_iter')
             learning_rate = self.attack_config.get('learning_rate')
             binary_search_steps = self.attack_config.get('binary_search_steps')
@@ -23,10 +19,36 @@ class AttackExecutor:
             attack = ZooAttack(classifier=self.model, max_iter=max_iter,learning_rate=learning_rate,
                                binary_search_steps=binary_search_steps,use_resize=use_resize,variable_h=variable_h)
             return attack
-        # Add other attacks here as elif branches
+        
+        elif attack_name == 'HopSkipJump':
+            max_iter = self.attack_config.get('max_iter')
+            max_eval = self.attack_config.get('max_eval')
+            init_eval = self.attack_config.get('init_eval')
+            init_size = self.attack_config.get('init_size')
+            norm = self.attack_config.get('norm')
+
+            attack = HopSkipJump(classifier=self.model,max_iter=max_iter,
+                                 max_eval=max_eval,init_eval=init_eval,init_size=init_size,norm=norm)
+            return attack
+        
+        elif attack_name == 'SignOPTAttack':
+            targeted = self.attack_config.get('targeted')
+            epsilon = self.attack_config.get('epsilon')
+
+            attack = SignOPTAttack(estimator=self.model,targeted=targeted,epsilon=epsilon)
+            return attack
+        
+        elif attack_name == 'GeoDA':
+            max_iter = self.attack_config.get('max_iter')
+            sigma = self.attack_config.get('sigma')
+            bin_search_tol = self.attack_config.get('bin_search_tol')
+            norm = self.attack_config.get('norm')
+
+            attack = GeoDA(estimator=self.model,max_iter=max_iter,sigma=sigma,bin_search_tol=bin_search_tol,norm=norm)
+            return attack
         else:
             raise ValueError(f"Unsupported attack: {attack_name}")
 
-    def execute_attack(self):
-        x_adv = self.attack.generate(x=self.x_test)
+    def execute_attack(self, x):
+        x_adv = self.attack.generate(x=x)
         return x_adv
