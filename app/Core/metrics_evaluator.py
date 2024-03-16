@@ -41,6 +41,9 @@ class MetricsEvaluator:
         self.overall_precision = precision_score(self.y_test, self.y_pred, average='weighted', zero_division=0)
         self.overall_recall = recall_score(self.y_test, self.y_pred, average='weighted', zero_division=0)
         self.metrics_per_class = self.calculate_metrics_per_class() # might need to extend this for other metrics, so different function
+
+    
+    def get_metrics(self):
         return {
             "overall_accuracy":self.overall_accuracy,
             "overall_precision":self.overall_precision,
