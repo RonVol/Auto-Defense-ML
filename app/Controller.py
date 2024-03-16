@@ -2,18 +2,23 @@ from app.Core.main_core import Main_Core
 from app.UI.main_ui import Main_UI
 import app.config as config
 from app.data_loader import DataLoader
+import Reports.report_generator
 
 class Controller:
-    def __init__(self, core : Main_Core, ui : Main_UI):
+    def __init__(self, core : Main_Core, ui : Main_UI, report : Reports):
         self.core = core
         self.ui = ui
+        self.report = report
 
     def run_ui(self):
         #self.ui.run_ui()
 
         #for testing without ui
         self.validate_user_input()
-        self.start_main_pipeline()
+        metrics = self.start_main_pipeline()
+        report = self.report.report_generator(metrics)
+        report.build_json()
+
 
     def validate_user_input(self):
         inp = self.ui.get_simulated_user_input()# for now simulated, later change it.
@@ -25,7 +30,7 @@ class Controller:
         parameters = self.get_user_input_parameters()
         attacks = self.get_user_chosen_attacks()
         defenses = self.get_user_chosen_defenses()
-        self.core.main_loop(dataloader,parameters,attacks,defenses)
+        return self.core.main_loop(dataloader,parameters,attacks,defenses)
         #print(dataloader.y_test[0])
 
     def get_user_chosen_attacks(self):
