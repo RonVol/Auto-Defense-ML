@@ -2,12 +2,27 @@ from art.attacks.evasion import ZooAttack, HopSkipJump, SignOPTAttack, GeoDA
 # Import other attacks as needed
 
 class AttackExecutor:
+    """
+    The AttackExecutor class is responsible for initializing and executing adversarial attacks on a given model.
+    """
     def __init__(self, attack_config, model):
+        """
+        Initializes the AttackExecutor with an attack configuration and a model.
+        
+        :param attack_config: A dictionary containing the configuration for the attack to be executed.
+                              This includes the name of the attack and any necessary parameters.
+        :param model: The machine learning model to be attacked.
+        """
         self.attack_config = attack_config
         self.model = model
         self.attack = self.initialize_attack()
 
     def initialize_attack(self):
+        """
+        Initializes the attack based on the configuration provided during object creation.
+        
+        :return: An instance of the specified attack.
+        """
         attack_name = self.attack_config['name']
         if attack_name == 'ZooAttack':
             max_iter = self.attack_config.get('max_iter')
@@ -50,5 +65,11 @@ class AttackExecutor:
             raise ValueError(f"Unsupported attack: {attack_name}")
 
     def execute_attack(self, x):
+        """
+        Executes the initialized attack on the provided input data.
+        
+        :param x: The input data to be attacked.
+        :return: The adversarially perturbed input data.
+        """
         x_adv = self.attack.generate(x=x)
         return x_adv
