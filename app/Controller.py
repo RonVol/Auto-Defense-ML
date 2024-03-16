@@ -25,7 +25,7 @@ class Controller:
         parameters = self.get_user_input_parameters()
         attacks = self.get_user_chosen_attacks()
         defenses = self.get_user_chosen_defenses()
-        self.core.run_pipeline(dataloader,parameters,attacks,defenses)
+        self.core.main_loop(dataloader,parameters,attacks,defenses)
         #print(dataloader.y_test[0])
 
     def get_user_chosen_attacks(self):
