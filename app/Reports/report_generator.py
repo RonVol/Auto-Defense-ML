@@ -1,4 +1,4 @@
-import utils.json_to_pdf_converter as jtp
+import json_to_pdf_converter as jtp
 import json
 
 class Report_Generator:

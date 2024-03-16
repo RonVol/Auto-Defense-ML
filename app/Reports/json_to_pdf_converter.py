@@ -1,10 +1,11 @@
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
+import os
 import json
 
 class Json_To_Pdf:
-    def __init__(self, json_file, output_pdf):
+    def __init__(self, json_file, output_pdf=os.getcwd()):
         self.json_file = json_file
         self.output_pdf = output_pdf
 
