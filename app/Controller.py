@@ -2,13 +2,12 @@ from app.Core.main_core import Main_Core
 from app.UI.main_ui import Main_UI
 import app.config as config
 from app.data_loader import DataLoader
-import Reports.report_generator
+from app.Reports.report_generator import Report_Generator
 
 class Controller:
-    def __init__(self, core : Main_Core, ui : Main_UI, report : Reports):
+    def __init__(self, core : Main_Core, ui : Main_UI):
         self.core = core
         self.ui = ui
-        self.report = report
 
     def run_ui(self):
         #self.ui.run_ui()
@@ -16,7 +15,7 @@ class Controller:
         #for testing without ui
         self.validate_user_input()
         metrics = self.start_main_pipeline()
-        report = self.report.report_generator(metrics)
+        report = Report_Generator(metrics)
         report.build_json()
 
 
