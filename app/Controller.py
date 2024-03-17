@@ -16,7 +16,7 @@ class Controller:
         self.validate_user_input()
         metrics = self.start_main_pipeline()
         report = Report_Generator(metrics)
-        report.build_json()
+        report.generate_pdf()
 
 
     def validate_user_input(self):

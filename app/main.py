@@ -1,6 +1,6 @@
 from app.Core.main_core import Main_Core
 from app.UI.main_ui import Main_UI
-from app.controller import Controller
+from app.Controller import Controller
 
 if __name__ == "__main__":
     # create controller for interaction between core and gui
