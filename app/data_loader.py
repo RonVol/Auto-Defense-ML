@@ -35,12 +35,17 @@ class DataLoader:
     
     def load_test(self,x_test_path=None,y_test_path=None, y_test_proba_fpath=None):
         # if .npy extension...
-        if x_test_path is not None:
-            self.__x_test = np.load(x_test_path)
-        if y_test_path is not None:
-            self.__y_test = np.load(y_test_path)
-        if y_test_proba_fpath is not None:
-            self.__y_test_proba = np.load(y_test_proba_fpath)
+        try:
+            if x_test_path is not None:
+                self.__x_test = np.load(x_test_path)
+            if y_test_path is not None:
+                self.__y_test = np.load(y_test_path)
+            if y_test_proba_fpath is not None:
+                self.__y_test_proba = np.load(y_test_proba_fpath)
+            return True
+        except:
+            return False
+
 
     @property
     def nb_classes(self):
