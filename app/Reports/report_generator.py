@@ -18,14 +18,14 @@ class Report_Generator:
     def build_json(self):
         self.dict_preperation()
         #replacing all the values with the dictionary of the metrics
-        for key in self.all_metrics.keys():
-            self.all_metrics[key] = self.all_metrics[key].get_metrics()
+        # for key in self.all_metrics.keys():
+        #     self.all_metrics[key] = self.all_metrics[key].get_metrics()
              
         # Writing dictionary to JSON file
         with open(self.file, "w") as json_file:
             json.dump(self.all_metrics, json_file)
 
-    def generate_pdf(self):
+    def generate_pdf(self, data, adv_examples):
          self.build_json()
-         pdf = jtp.Json_To_Pdf(self.file)
+         pdf = jtp.Json_To_Pdf(self.file, data, adv_examples)
          return pdf.create_pdf()
