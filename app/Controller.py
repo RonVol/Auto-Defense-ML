@@ -10,7 +10,7 @@ class Controller:
         self.ui = ui
 
     def run_ui(self):
-        #self.ui.run_ui()
+        self.ui.run()
 
         #for testing without ui
         self.validate_user_input()
