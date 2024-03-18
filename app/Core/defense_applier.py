@@ -1,11 +1,11 @@
-from art.defences.preprocessor import SpatialSmoothing, JpegCompression, ThermometerEncoding
+from art.defences.preprocessor import SpatialSmoothing, JpegCompression, ThermometerEncoding, FeatureSqueezing
 # Import other attacks as needed
 
 class DefenseApplier:
     """
     The DefenseApplier class is responsible for applying defenses to input data.
     """
-    def __init__(self, defense_config, model):
+    def __init__(self, defense_config, model, clip_values):
         """
         Initializes the DefenseApplier with a defense configuration and a model.
         
@@ -17,6 +17,7 @@ class DefenseApplier:
         """
         self.defense_config = defense_config
         self.model = model
+        self.clip_values = clip_values
         self.defense = self.initialize_defense()
 
     def initialize_defense(self):
@@ -26,12 +27,12 @@ class DefenseApplier:
         :return: An instance of the specified defense.
         """
         defense_name = self.defense_config['name']
-        if defense_name == 'SpatialSmoothing':
-            window_size = self.defense_config.get('window_size')
+        if defense_name == 'FeatureSqueezing':
+            bit_depth = self.defense_config.get('bit_depth')
             apply_fit = self.defense_config.get('apply_fit')
             apply_predict = self.defense_config.get('apply_predict')
 
-            defense =  SpatialSmoothing(window_size=window_size,apply_fit=apply_fit,apply_predict=apply_predict)
+            defense =  FeatureSqueezing(bit_depth=bit_depth,apply_fit=apply_fit,apply_predict=apply_predict,clip_values=self.clip_values)
             return defense
         
         elif defense_name == 'JpegCompression':
@@ -60,7 +61,7 @@ class DefenseApplier:
         :param x: The input data to which the defense will be applied. Expected to be in a flattened format.
         :return: The defended input data, reshaped back to its original flattened format.
         """
-        x_reshaped = x.reshape((-1, 28, 28, 1))
-        x_defended,_ = self.defense(x_reshaped)
-        x_defended = x_defended.reshape(-1, 28*28)
+        #print(f"x before:{x}")
+        x_defended,_ = self.defense(x)
+        #print(f"x after:{x_defended}")
         return x_defended

@@ -15,8 +15,11 @@ class MetricsEvaluator:
         """
         self.classifier = model
         self.x_test = x_test
-        # Convert y_test from one-hot encoding to label encoding
-        self.y_test = np.argmax(y_test, axis=1)
+        # Check if y_test is one-hot encoded and convert it to label encoding if true
+        if len(y_test.shape) == 2 and y_test.shape[1] > 1:
+            self.y_test = np.argmax(y_test, axis=1)
+        else:
+            self.y_test = y_test
         self.y_pred = self.predict()
         self.run_metrics_calculations()
 
@@ -67,7 +70,7 @@ class MetricsEvaluator:
         :param by_class: If True, prints detailed metrics for each class.
         """
         print("Overall Accuracy:", self.overall_accuracy)
-        print("Overall Recall:", self.overall_precision)
-        print("Overall Precision:", self.overall_recall)
+        print("Overall Recall:", self.overall_recall)
+        print("Overall Precision:", self.overall_precision)
         if by_class:
             print("Metrics by Class:\n", self.metrics_per_class)

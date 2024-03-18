@@ -6,81 +6,96 @@ from art.attacks.evasion import ZooAttack
 from app.Core.metrics_evaluator import MetricsEvaluator
 from app.Core.attack_executor import AttackExecutor
 from app.Core.defense_applier import DefenseApplier
+import logging
+
+logger = logging.getLogger(__name__)
 
 class Main_Core:
     def __init__(self):
-        self.dataloader = None
-        self.classifier = None
-        self.status = ""
+        logger.info("Init Main_Core")
+        self.__dataloader = None
+        self.__status = "Idle"
+        self.__classifier = None
 
-    def get_status(self):
-        """
-        Returns the current status of the evaluation pipeline.
-        
-        :return: Current status as a string.
-        """
-        return self.status
+    @property
+    def dataloader(self):
+        """The getter method for the dataloader property."""
+        return self.__dataloader
+
+    @dataloader.setter
+    def dataloader(self, dataloader):
+        """The setter method for the dataloader property."""
+        if not isinstance(dataloader, DataLoader):
+            raise ValueError("dataloader must be an instance of DataLoader")
+        self.__dataloader = dataloader
+        self.setup_art_classifier() # sets self.classifier wrapped in ART classifier
+
+    @property
+    def status(self):
+        return self.__status
     
-    def setup_pipeline(self, dataloader: DataLoader, parameters, attacks, defenses):
-        """
-        Sets up the evaluation pipeline by initializing data, models, attacks, and defenses.
-        
-        :param dataloader: DataLoader instance for accessing the dataset.
-        :param parameters: Dictionary containing model parameters and configuration.
-        :param attacks: List of attack configurations to be evaluated.
-        :param defenses: List of defense configurations to be applied.
-        """
-        self.dataloader = dataloader
-        self.parameters = parameters
-        self.attacks = attacks
-        self.defenses = defenses
-        self.setup_art_classifier()
-        self.x_test = self.dataloader.x_test
-        self.y_test = self.dataloader.y_test
-
-
-    def main_loop(self, dataloader: DataLoader, parameters, attacks, defenses):
-        """
-        Main loop of the evaluation pipeline. Sets up the pipeline, applies defenses and attacks,
-        and evaluates the model's performance.
-        
-        :param dataloader: DataLoader instance for accessing the dataset.
-        :param parameters: Dictionary containing model parameters and configuration.
-        :param attacks: List of attack configurations to be evaluated.
-        :param defenses: List of defense configurations to be applied.
-        :return: A dictionary containing all evaluation metrics.
-        """
-        self.status = "Setting up..."
-        self.setup_pipeline(dataloader, parameters, attacks, defenses)
-
-        all_metrics = {}
-        # 1 - Evaluate on clean input
-        clean_evaluator = MetricsEvaluator(self.classifier, self.x_test, self.y_test)
-        all_metrics['clean'] = clean_evaluator
-
+    def requires_dataloader(func):
+        def wrapper(self, *args, **kwargs):
+            if self.__dataloader is None or self.__classifier is None:
+                raise ValueError("Dataloader has not been set.")
+            return func(self, *args, **kwargs)
+        return wrapper
+    
+    @requires_dataloader
+    def perform_attacks(self, attacks):
+        x_org = self.__dataloader.x
+        y_org = self.__dataloader.y
+        clip_values = self.__dataloader.clip_values
+        metrics = {}
+        adv_examples = {}
+        for att in attacks:
+            executor = AttackExecutor(attack_config=att, model=self.__classifier,clip_values=clip_values)
+            x_adv = executor.execute_attack(x_org)
+            evaluator = MetricsEvaluator(self.__classifier, x_adv, y_org)
+            metrics[att['name']] = evaluator.get_metrics()
+            adv_examples[att['name']] = x_adv
+        return metrics, adv_examples
+    
+    @requires_dataloader
+    def perform_defenses(self, defenses):
+        x_org = self.__dataloader.x
+        y_org = self.__dataloader.y
+        clip_values = self.__dataloader.clip_values
+        metrics = {}
+        defended_examples = {}
         for defense in defenses:
-            applier = DefenseApplier(defense_config=defense,model=self.classifier)
-            
-            # 2 - Evaluate only on defense
-            x_original_defended = applier.apply_defense(self.x_test)
-            only_defense_evaluator = MetricsEvaluator(self.classifier, x_original_defended, self.y_test)
-            all_metrics[defense['name']] = only_defense_evaluator
 
-            for att in attacks:
-                executor = AttackExecutor(attack_config=att, model=self.classifier)
+            applier = DefenseApplier(defense_config=defense, model=self.__classifier,clip_values=clip_values)
+            x_defended = applier.apply_defense(x_org)
+            evaluator = MetricsEvaluator(self.__classifier, x_defended, y_org)
+            metrics[defense['name']] = evaluator.get_metrics()
+            defended_examples[defense['name']] = x_defended
+        return metrics, defended_examples
+    
+    @requires_dataloader
+    def perform_defenses_on_attacks(self, defenses, adv_examples):
+        y_org = self.__dataloader.y
+        clip_values = self.__dataloader.clip_values
+        metrics = {}
+        adv_defended_examples = {}
+        for defense in defenses:
+            applier = DefenseApplier(defense_config=defense, model=self.__classifier,clip_values=clip_values)
+            for att_name, adv_ex in adv_examples.items():         
+                x_adv_defended = applier.apply_defense(adv_ex)
+                evaluator = MetricsEvaluator(self.__classifier, x_adv_defended, y_org)
+                metrics[defense['name'], att_name] = evaluator.get_metrics()
+                adv_defended_examples[defense['name'], att_name] = x_adv_defended
 
-                # 3 - Evaluate only on attack
-                x_adv = executor.execute_attack(self.x_test)
-                only_attack_evaluator = MetricsEvaluator(self.classifier, x_adv, self.y_test)
-                all_metrics[att['name']] = only_attack_evaluator
-
-                # 4 - Evaluate on defense and attack
-                x_adv_defended = applier.apply_defense(x_adv)
-                defense_attack_evaluator = MetricsEvaluator(self.classifier, x_adv_defended, self.y_test)
-                all_metrics[defense['name'], att['name']] = defense_attack_evaluator
-
-        self.print_all_metrics(all_metrics)
-        return all_metrics
+        return metrics, adv_defended_examples
+    
+    @requires_dataloader
+    def perform_benign_evaluation(self):
+        x_org = self.__dataloader.x
+        y_org = self.__dataloader.y
+        metrics = {}
+        evaluator = MetricsEvaluator(self.__classifier, x_org, y_org)
+        metrics['Clean'] = evaluator.get_metrics()
+        return metrics
     
     def print_all_metrics(self, all_metrics, by_class=False):
         """
@@ -108,11 +123,14 @@ class Main_Core:
 
 
     def setup_art_classifier(self):
-        model = self.dataloader.model
+        model = self.__dataloader.model
+        nb_features=self.__dataloader.nb_features
+        nb_classes=self.__dataloader.nb_classes
         if isinstance(model,Booster) or isinstance(model, XGBoostClassifier):
-            self.classifier = XGBoostClassifier(model=self.dataloader.model,
-                                                    nb_features=self.parameters['nb_features'],
-                                                    nb_classes=self.parameters['nb_classes'])
+            self.__classifier = XGBoostClassifier(model=model, nb_features=nb_features, nb_classes=nb_classes)
+
+
+
                 
 
 

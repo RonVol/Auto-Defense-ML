@@ -13,61 +13,68 @@ supported_libraries = {
 supported_attacks = {
     "ZooAttack": {
         "name": "ZooAttack",
-        "type:":"black-box",
-        "max_iter": 10,
+        "type":"black-box",
+        "targeted": False,
+        "confidence":0.0,
+        "max_iter": 20,
         "learning_rate": 1e-1,
-        "binary_search_steps": 20,
+        "initial_const":1e-3,
+        "binary_search_steps": 10,
+        "batch_size":1,
+        "use_importance": False,
+        "nb_parallel": 1,
+        "abort_early": True,
         "use_resize": False,
-        "variable_h":0.05,
+        "variable_h":0.2,
         "applicable_to": ["XGBoost"]
     },
     "HopSkipJump": {
         "name": "HopSkipJump",
-        "type:":"black-box",
-        "max_iter": 50,
-        "max_eval": 10000,
+        "type":"black-box",
+        "targeted": False,
+        "batch_size":1,
+        "max_iter": 100,
+        "max_eval": 100,
         "init_eval": 100,
         "init_size": 100,
         "norm":2,
         "applicable_to": ["XGBoost"]
     },
-    "SignOPTAttack": { # TODO : self.clip_min not defined, bug in ART ? 
+    "SignOPTAttack": { # self.clip_min not defined, bug in ART ? temporary fix by defining it manually in executor
         "name": "SignOPTAttack",
-        "type:":"black-box",
+        "type":"black-box",
         "targeted": False,
         "epsilon": 0.001,
+        "num_trial": 10,
+        "max_iter": 10,
+        "query_limit": 20000,
+        "k": 200,
+        "alpha": 0.2,
+        "beta": 0.001,
+        "batch_size": 1,
         "applicable_to": ["XGBoost"]
     },
-    "GeoDA": {
-        "name": "GeoDA", # 'XGBoostClassifier' object has no attribute 'channels_first'
-        "type:":"black-box",
-        "max_iter": 4000,
-        "sigma": 0.0002,
-        "bin_search_tol": 0.1,
-        "norm": 2,
+    "BoundaryAttack": {
+        "name": "BoundaryAttack",
+        "type":"black-box",
+        "targeted": False,
+        "batch_size": 1,
+        "delta":0.01,
+        "epsilon":0.01,
+        "step_adapt":0.667,
+        "max_iter": 100,
+        "num_trial": 25,
+        "sample_size": 20,
+        "init_size": 100,
+        "min_epsilon":0.0,
         "applicable_to": ["XGBoost"]
     },
 }
 
 supported_defenses = {
-    "SpatialSmoothing": {
-        "name": "SpatialSmoothing",
-        "window_size": 3,
-        "apply_fit": False,
-        "apply_predict": True,
-        "applicable_to": ["XGBoost"]
-    },
-    "JpegCompression": { # Negative values in input `x` detected. The JPEG compression defence requires unnormalized input.
-        "name": "JpegCompression",
-        "clip_values": (0,1),
-        "quality": 50,
-        "apply_fit": False,
-        "apply_predict": True,
-        "applicable_to": ["XGBoost"]
-    },
-    "ThermometerEncoding": { # need to see what happends to the shape, Found input variables with inconsistent numbers of samples: [10, 100]
-        "name": "ThermometerEncoding",
-        "clip_values": (0,1),
+    "FeatureSqueezing": {
+        "name": "FeatureSqueezing",
+        "bit_depth": 3,
         "apply_fit": False,
         "apply_predict": True,
         "applicable_to": ["XGBoost"]
