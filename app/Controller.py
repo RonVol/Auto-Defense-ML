@@ -8,57 +8,64 @@ class Controller:
     def __init__(self, core : Main_Core, ui : Main_UI):
         self.core = core
         self.ui = ui
+        self.ui.set_controller(self)
+        self.dataloader = None
+
+    def handle_load(self, model_path, x_path, y_path, selected_library):
+        print("Model Path:", model_path)
+        print("Selected Library:", selected_library)
+        print("X Path:", x_path)
+        print("Y Path:", y_path)
+        dataloader, is_success, message = self.create_dataloader(model_path, selected_library, x_path, y_path)
+        print(message)
+        self.dataloader = dataloader
+        return is_success
+    
+    def handle_configuration(self, selected_attacks, selected_defenses, chosen_run):
+        print("in handle_configuration")
+        if chosen_run == 1: # default parameters or manually configured
+            print("in handle_configuration chosen_run == 1")
+            self.start_main_pipeline(selected_attacks, selected_defenses)
+        elif chosen_run == 2: # optimize
+            self.start_main_pipeline(selected_attacks, selected_defenses)
+
 
     def run_ui(self):
         self.ui.run()
-
-        #for testing without ui
-        self.validate_user_input()
-        metrics = self.start_main_pipeline()
-        report = Report_Generator(metrics)
-        report.generate_pdf()
-
-
-    def validate_user_input(self):
-        inp = self.ui.get_simulated_user_input()# for now simulated, later change it.
-        #if config.validate_user_input(inp): should perform validation to the schema
-        self.user_input = inp
     
-    def start_main_pipeline(self):
-        dataloader = self.create_dataloader()
-        parameters = self.get_user_input_parameters()
-        attacks = self.get_user_chosen_attacks()
-        defenses = self.get_user_chosen_defenses()
-        return self.core.main_loop(dataloader,parameters,attacks,defenses)
-        #print(dataloader.y_test[0])
+    def start_main_pipeline(self,attacks, defenses):
+        print("in start_main_pipelin")
+        self.core.dataloader = self.dataloader
+        self.ui.update_progress("Performing benign evaluation...")
+        clean_metrics = self.core.perform_benign_evaluation()
+        self.ui.update_progress("perform_attacks...")
+        metrics_att, adv_examples = self.core.perform_attacks(attacks)
+        self.ui.update_progress("perform_defenses...")
+        metrics_deff, defended_examples = self.core.perform_defenses(defenses)
+        self.ui.update_progress("perform_defenses_on_attacks...")
+        metrics_att_def, adv_defended_examples = self.core.perform_defenses_on_attacks(defenses,adv_examples)
+        self.ui.update_progress("DONE!")
+        print(40*"-")
+        print(clean_metrics)
+        print(40*"-")
+        print(metrics_att)
+        print(40*"-")
+        print(metrics_deff)
+        print(40*"-")
+        print(metrics_att_def)
 
-    def get_user_chosen_attacks(self):
-        chosen_attacks = self.user_input['chosen_attacks']
-        return chosen_attacks
-    
-    def get_user_chosen_defenses(self):
-        chosen_defenses = self.user_input['chosen_defenses']
-        return chosen_defenses
 
-    def get_user_input_parameters(self):
-        nb_classes = self.user_input['nb_classes']
-        nb_features = self.user_input['nb_features']   
-        return {'nb_classes':nb_classes, 'nb_features':nb_features}
-
-    def create_dataloader(self):
+    def create_dataloader(self,model_fpath, model_library, x_test_fpath, y_test_fpath):
         dataloader = DataLoader()
-        model_fpath = self.user_input['model_path']
-        x_test_fpath = self.user_input['x_test_path']
-        y_test_fpath = self.user_input['y_test_path']
-        model_library = self.user_input['model_library']
-
+        message = "Data Loading Status: "
         if not dataloader.load_model(model_library, model_fpath):
-            # pass to ui that failed to load model
-            pass
+            message = message + " Failed to load the model: " + model_fpath
+            return dataloader, False, message
 
         if not dataloader.load_test(x_test_fpath,y_test_fpath):
-            # pass to ui that failed to load test
-            pass
+            message = message + " Failed to load test data."
+            return dataloader, False, message
 
-        return dataloader
+        message = message + " Success"
+        return dataloader, True, message
 
