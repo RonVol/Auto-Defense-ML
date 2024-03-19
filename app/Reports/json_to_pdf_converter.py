@@ -1,6 +1,7 @@
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib import colors
 import numpy as np
 from matplotlib import pyplot as plt
 import os
@@ -19,7 +20,7 @@ class Json_To_Pdf:
     def get_data(self, num_classes=200):
         x_train = self.data.x
         y_train = self.data.y
-        y_train = y_train.reshape(y_train.shape[0]*y_train.shape[1],)[:x_train.shape[0]]
+        #y_train = y_train.reshape(y_train.shape[0]*y_train.shape[1],)[:x_train.shape[0]]
         x_train = x_train[y_train < num_classes][:, [0, 1]]
         y_train = y_train[y_train < num_classes]
         x_train[:, 0][y_train == 0] *= 2
@@ -64,9 +65,9 @@ class Json_To_Pdf:
             y_min, y_max = 0, 1
 
             xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
-
-            Z_proba = self.data.model.predict_proba(np.c_[xx.ravel(), yy.ravel()])
-            Z_proba = Z_proba[:, i_class].reshape(xx.shape)
+            Z_proba = self.data.model.predict_proba(np.c_[xx.all(), yy.all(), xx.any(), yy.any()])
+            print(Z_proba, Z_proba.shape)
+            Z_proba = Z_proba[:, i_class]
             im = axs[i_class].contourf(xx, yy, Z_proba, levels=[0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
                                     vmin=0, vmax=1)
             if i_class == num_classes - 1:
@@ -88,36 +89,23 @@ class Json_To_Pdf:
             axs[i_class].set_xlabel('feature 1')
             axs[i_class].set_ylabel('feature 2')
 
-    def add_json_to_pdf(self, content, json_data, indent=0):
-        styles = getSampleStyleSheet()
+    def add_json_to_table(self, json_data):
+        data = []
+        self.parse_json_to_table(json_data, data)
+        return data
+
+    def parse_json_to_table(self, json_data, data, prefix=""):
         if isinstance(json_data, dict):
             for key, value in json_data.items():
-                if isinstance(value, dict):
-                    content.append(Paragraph("<b>{}</b>: ".format(key), styles["Heading2"]))
+                if isinstance(value, dict) or isinstance(value, list):
+                    self.parse_json_to_table(value, data, prefix=prefix + key + ".")
                     x_train, y_train = self.get_data()
                     self.plot_results(x_train, y_train, self.adv)
-                    self.add_json_to_pdf(content, value, indent + 1)
-                elif isinstance(value, list):
-                    if self.is_numeric_array(value):
-                        content.append(Paragraph("<b>{}</b>: {}".format(key, value), styles["Normal"]))
-                    else:
-                        content.append(Paragraph("<b>{}</b>:".format(key), styles["Normal"]))
-                        for item in value:
-                            if isinstance(item, dict):
-                                self.add_json_to_pdf(content, item, indent + 1)
-                            else:
-                                content.append(Paragraph(str(item), styles["Normal"]))
                 else:
-                    content.append(Paragraph("<b>{}</b>: {}".format(key, value), styles["Normal"]))
+                    data.append([prefix + key, str(value)])
         elif isinstance(json_data, list):
-            if self.is_numeric_array(json_data):
-                content.append(Paragraph(str(json_data), styles["Normal"]))
-            else:
-                for item in json_data:
-                    if isinstance(item, dict):
-                        self.add_json_to_pdf(content, item, indent)
-                    else:
-                        content.append(Paragraph(str(item), styles["Normal"]))
+            for i, item in enumerate(json_data):
+                self.parse_json_to_table(item, data, prefix=prefix + f"{i}.")
 
     def create_pdf(self):
         #print("output path:", self.output_pdf)
@@ -132,8 +120,26 @@ class Json_To_Pdf:
         content.append(title)
         content.append(Spacer(1, 12))
 
-        self.add_json_to_pdf(content, json_data)
-        doc.build(content)
+         # Convert JSON data to table format
+        table_data = self.add_json_to_table(json_data)
+
+        # Create a table with two columns
+        table = Table(table_data, colWidths=[300, 300])
+
+        # Define table style
+        style = TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),
+                            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                            ('GRID', (0, 0), (-1, -1), 1, colors.black)])
+
+        # Apply table style
+        table.setStyle(style)
+
+        # Add table to the document
+        doc.build([table])
 
     # # Example usage:
     # json_file = "data.json"

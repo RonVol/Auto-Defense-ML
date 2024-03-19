@@ -53,6 +53,11 @@ class Controller:
         print(metrics_deff)
         print(40*"-")
         print(metrics_att_def)
+        clean_metrics.update(metrics_att)
+        clean_metrics.update(metrics_deff)
+        clean_metrics.update(metrics_att_def)
+        report = Report_Generator(clean_metrics)
+        report.generate_pdf(self.dataloader, adv_examples)
 
 
     def create_dataloader(self,model_fpath, model_library, x_test_fpath, y_test_fpath):

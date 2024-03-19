@@ -25,7 +25,7 @@ class DataLoader:
         #switch case on whitch library...
         #if library is xgboost...
         try:
-            self.__model = xgb.Booster()
+            self.__model = xgb.XGBClassifier()
             self.__model.load_model(path_to_model)
             print(f"Model loaded from {path_to_model}")
             return True

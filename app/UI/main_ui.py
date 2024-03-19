@@ -4,9 +4,9 @@ from app.config import supported_libraries, supported_attacks, supported_defense
 class Main_UI:
     def __init__(self):
         self.controller = None
-        self.def_model_path = "D:\CapstoneProject\Auto-Defense-ML\models\iris_xgboost.model"
-        self.def_x_path = "D:\CapstoneProject\Auto-Defense-ML\models\iris_xgboost_x_test.npy"
-        self.def_y_path = "D:\CapstoneProject\Auto-Defense-ML\models\iris_xgboost_y_test.npy"
+        self.def_model_path = "/home/kolelyh/Downloads/Auto-Defense-ML/models/iris_xgboost.model"
+        self.def_x_path = "/home/kolelyh/Downloads/Auto-Defense-ML/models/iris_xgboost_x_test.npy"
+        self.def_y_path = "/home/kolelyh/Downloads/Auto-Defense-ML/models/iris_xgboost_y_test.npy"
         self.setup_ui()
 
     def set_controller(self, controller):

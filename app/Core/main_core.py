@@ -1,5 +1,6 @@
 from art.estimators.classification import XGBoostClassifier
 from xgboost import Booster, XGBClassifier
+import xgboost as xgb
 from app.data_loader import DataLoader
 from app.config import supported_libraries, supported_attacks, supported_defenses
 from art.attacks.evasion import ZooAttack
@@ -126,7 +127,7 @@ class Main_Core:
         model = self.__dataloader.model
         nb_features=self.__dataloader.nb_features
         nb_classes=self.__dataloader.nb_classes
-        if isinstance(model,Booster) or isinstance(model, XGBoostClassifier):
+        if isinstance(model,Booster) or isinstance(model, XGBoostClassifier) or isinstance(model, xgb.XGBClassifier):
             self.__classifier = XGBoostClassifier(model=model, nb_features=nb_features, nb_classes=nb_classes)
 
 
