@@ -4,9 +4,9 @@ from app.config import supported_libraries, supported_attacks, supported_defense
 class Main_UI:
     def __init__(self):
         self.controller = None
-        self.def_model_path = "/home/kolelyh/Downloads/Auto-Defense-ML/models/iris_xgboost.model"
-        self.def_x_path = "/home/kolelyh/Downloads/Auto-Defense-ML/models/iris_xgboost_x_test.npy"
-        self.def_y_path = "/home/kolelyh/Downloads/Auto-Defense-ML/models/iris_xgboost_y_test.npy"
+        self.def_model_path = "models/iris_xgboost.model"
+        self.def_x_path = "models/iris_xgboost_x_test.npy"
+        self.def_y_path = "models/iris_xgboost_y_test.npy"
         self.setup_ui()
 
     def set_controller(self, controller):
@@ -78,7 +78,10 @@ class Main_UI:
                             with dpg.group(horizontal=True):  # Grouping label and input horizontally
                                 dpg.add_text(f"{param}: ")  # Fixed width for the label
                                 # Shorter input field with specific width
-                                dpg.add_input_text(default_value=str(value), width=200, tag=f"{attack_config['name']}_{param}")
+                                if isinstance(value,bool):
+                                        dpg.add_checkbox(default_value=value, tag=f"{attack_config['name']}_{param}")
+                                else:
+                                    dpg.add_input_text(default_value=str(value), width=200, tag=f"{attack_config['name']}_{param}")
 
             dpg.add_separator()
 
@@ -93,7 +96,10 @@ class Main_UI:
                             with dpg.group(horizontal=True):  # Grouping label and input horizontally
                                 dpg.add_text(f"{param}: ")  # Fixed width for the label
                                 # Shorter input field with specific width
-                                dpg.add_input_text(default_value=str(value), width=200, tag=f"{defense_config['name']}_{param}")
+                                if isinstance(value,bool):
+                                    dpg.add_checkbox(default_value=value, tag=f"{defense_config['name']}_{param}")
+                                else:
+                                    dpg.add_input_text(default_value=str(value), width=200, tag=f"{defense_config['name']}_{param}")
 
             dpg.add_separator()
             dpg.add_button(label="Begin Run", callback=self.on_proceed_with_selection_manual_config)
@@ -155,19 +161,20 @@ class Main_UI:
     def show_progress_window(self):
         with dpg.window(label="Pipeline Progress", tag="progress_window", width=1280, height=720, no_move=True):
             # Adding spacers for vertical alignment
-            dpg.add_spacer(height=10)  # Adjust height for better vertical alignment
+            dpg.add_spacer(height=300)  # Adjust height for better vertical alignment
             
             # Text centering through layout adjustment
-            with dpg.group(horizontal=True):
+            with dpg.group(horizontal=True, width=980/2):
                 dpg.add_spacer()  # Auto-adjusts to center the following widget
                 dpg.add_text("Starting pipeline...", tag="progress_text")
                 dpg.add_spacer()  # Ensures the text widget is centered
             
             dpg.add_spacer(height=10)  # Adjust height for better vertical alignment
 
+            
     def update_progress(self, message):
         if dpg.does_item_exist("progress_text"):
-            dpg.set_value("progress_text", message)
+            dpg.set_value("progress_text",dpg.get_value("progress_text")+'\n'+ message)
         else:
             print("Progress window is not open or progress text does not exist.")
 
