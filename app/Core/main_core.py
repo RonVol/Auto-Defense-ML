@@ -7,16 +7,28 @@ from art.attacks.evasion import ZooAttack
 from app.Core.metrics_evaluator import MetricsEvaluator
 from app.Core.attack_executor import AttackExecutor
 from app.Core.defense_applier import DefenseApplier
+from app.Core.attack_optimizier import AttackOptimizier
 import logging
 
-logger = logging.getLogger(__name__)
 
 class Main_Core:
     def __init__(self):
-        logger.info("Init Main_Core")
+        self.logger = self.setup_logger()
         self.__dataloader = None
         self.__status = "Idle"
         self.__classifier = None
+    
+    def setup_logger(self):
+        logger = logging.getLogger("Main_Core")
+        logger.setLevel(logging.INFO)
+
+        # Create a file handler and set the log file
+        file_handler = logging.FileHandler("Main_Core_log.log")
+        formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
+
+        return logger
 
     @property
     def dataloader(self):
@@ -41,6 +53,17 @@ class Main_Core:
                 raise ValueError("Dataloader has not been set.")
             return func(self, *args, **kwargs)
         return wrapper
+    
+    def optimize_attacks(self, attacks):
+        print("in optimize attacks")
+
+        optimized_attacks = []
+        for attack in attacks:
+            att_optimizer = AttackOptimizier(attack,self.__dataloader,self.__classifier)
+            optimized_att = att_optimizer.optimize()
+            optimized_attacks.append(optimized_att)
+            self.logger.info(f"Optimized parameters: {optimized_att}")
+        return optimized_attacks
     
     @requires_dataloader
     def perform_attacks(self, attacks):

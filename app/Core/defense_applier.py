@@ -1,4 +1,4 @@
-from art.defences.preprocessor import SpatialSmoothing, JpegCompression, ThermometerEncoding, FeatureSqueezing
+from art.defences.preprocessor import ThermometerEncoding, FeatureSqueezing
 # Import other attacks as needed
 
 class DefenseApplier:
@@ -35,21 +35,14 @@ class DefenseApplier:
             defense =  FeatureSqueezing(bit_depth=bit_depth,apply_fit=apply_fit,apply_predict=apply_predict,clip_values=self.clip_values)
             return defense
         
-        elif defense_name == 'JpegCompression':
-            clip_values = self.defense_config.get('clip_values')
-            quality = self.defense_config.get('quality')
-            apply_fit = self.defense_config.get('apply_fit')
-            apply_predict = self.defense_config.get('apply_predict')
-
-            defense =  JpegCompression(clip_values=clip_values,quality=quality,apply_fit=apply_fit,apply_predict=apply_predict)
-            return defense
-        
         elif defense_name == 'ThermometerEncoding':
-            clip_values = self.defense_config.get('clip_values')
+            clip_values = self.clip_values
+            num_space = self.defense_config.get('num_space')
+            channels_first = self.defense_config.get('channels_first')
             apply_fit = self.defense_config.get('apply_fit')
             apply_predict = self.defense_config.get('apply_predict')
-
-            defense =  ThermometerEncoding(clip_values=clip_values,apply_fit=apply_fit,apply_predict=apply_predict)
+            print(f"in thermo, clipvalus:{type(clip_values)} , {clip_values}")
+            defense =  ThermometerEncoding(clip_values=clip_values,apply_fit=apply_fit,apply_predict=apply_predict,num_space=num_space,channels_first=channels_first)
             return defense
         else:
             raise ValueError(f"Unsupported defense: {defense_name}")
@@ -61,7 +54,7 @@ class DefenseApplier:
         :param x: The input data to which the defense will be applied. Expected to be in a flattened format.
         :return: The defended input data, reshaped back to its original flattened format.
         """
-        #print(f"x before:{x}")
+        print(f"x before:{x.shape}")
         x_defended,_ = self.defense(x)
-        #print(f"x after:{x_defended}")
+        print(f"x after:{x_defended.shape}")
         return x_defended
