@@ -57,8 +57,8 @@ class DataLoader:
     
     @property
     def clip_values(self):
-        min_clip = self.__x_test.min(axis=0)  # Minimum values for each feature across all samples
-        max_clip = self.__x_test.max(axis=0)  # Maximum values for each feature across all samples
+        min_clip = self.__x_test.min(axis=0).min()  # Minimum values for each feature across all samples
+        max_clip = self.__x_test.max(axis=0).max()  # Maximum values for each feature across all samples
         clip_values = (min_clip, max_clip)
         return clip_values
 
