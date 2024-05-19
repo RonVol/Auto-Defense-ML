@@ -53,9 +53,40 @@ class Controller:
         print(metrics_deff)
         print(40*"-")
         print(metrics_att_def)
+        # Extract parameter values
+        overall_accuracys = []
+        overall_precisions = []
+        overall_recalls = []
+        metrics = []
+        if clean_metrics != {}:
+            overall_accuracys.append(clean_metrics[list(clean_metrics)[0]]["overall_accuracy"])
+            overall_precisions.append(clean_metrics[list(clean_metrics)[0]]["overall_precision"])
+            overall_recalls.append(clean_metrics[list(clean_metrics)[0]]["overall_recall"])
+            metrics.append(str(list(clean_metrics)))
+        
+        if metrics_att != {}:
+            overall_accuracys.append(metrics_att[list(metrics_att)[0]]["overall_accuracy"])
+            overall_precisions.append(metrics_att[list(metrics_att)[0]]["overall_precision"])
+            overall_recalls.append(metrics_att[list(metrics_att)[0]]["overall_recall"])
+            metrics.append(str(list(metrics_att)))
+        
+        if metrics_deff != {}:
+            overall_accuracys.append(metrics_deff[list(metrics_deff)[0]]["overall_accuracy"])
+            overall_precisions.append(metrics_deff[list(metrics_deff)[0]]["overall_precision"])
+            overall_recalls.append(metrics_deff[list(metrics_deff)[0]]["overall_recall"])
+            metrics.append(str(list(metrics_deff)))
+        
+        if metrics_att_def != {}:
+            overall_accuracys.append(metrics_att_def[list(metrics_att_def)[0]]["overall_accuracy"])
+            overall_precisions.append(metrics_att_def[list(metrics_att_def)[0]]["overall_precision"])
+            overall_recalls.append(metrics_att_def[list(metrics_att_def)[0]]["overall_recall"])
+            metrics.append(str(list(metrics_att_def)))
         clean_metrics.update(metrics_att)
         clean_metrics.update(metrics_deff)
         clean_metrics.update(metrics_att_def)
+        print(40*"-")
+        print("final metrics:")
+        print(clean_metrics)
         report = Report_Generator(clean_metrics)
         report.generate_pdf(self.dataloader, adv_examples)
 

@@ -1,5 +1,6 @@
+from collections import defaultdict
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 import numpy as np
@@ -40,9 +41,9 @@ class Json_To_Pdf:
         # print("x_train_adv: ", x_train_adv)
         # print("num_classes: ", num_classes)
         x_train_adv = x_train_adv[list(x_train_adv)[0]]
-        print(self.data.model)
+        #print(self.data.model)
         fig, axs = plt.subplots(1, num_classes, figsize=(num_classes * 5, 5))
-        colors = ['orange', 'blue', 'green']
+        colors = ['blue', 'green', 'red', 'purple']
         for i_class in range(num_classes):
             # Plot difference vectors
             for i in range(y_train[y_train == i_class].shape[0]):
@@ -66,7 +67,7 @@ class Json_To_Pdf:
 
             xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
             Z_proba = self.data.model.predict_proba(np.c_[xx.all(), yy.all(), xx.any(), yy.any()])
-            print(Z_proba, Z_proba.shape)
+            #print(Z_proba, Z_proba.shape)
             Z_proba = Z_proba[:, i_class]
             im = axs[i_class].contourf(xx, yy, Z_proba, levels=[0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
                                     vmin=0, vmax=1)
@@ -98,14 +99,65 @@ class Json_To_Pdf:
         if isinstance(json_data, dict):
             for key, value in json_data.items():
                 if isinstance(value, dict) or isinstance(value, list):
-                    self.parse_json_to_table(value, data, prefix=prefix + key + ".")
-                    x_train, y_train = self.get_data()
-                    self.plot_results(x_train, y_train, self.adv)
+                    data.append([Paragraph("<b>{}</b>".format(key), self.styles["BodyText"]), ''])
+                    self.parse_json_to_table(value, data)
                 else:
                     data.append([prefix + key, str(value)])
         elif isinstance(json_data, list):
             for i, item in enumerate(json_data):
-                self.parse_json_to_table(item, data, prefix=prefix + f"{i}.")
+                self.parse_json_to_table(item, data, prefix= f"{i}.")
+
+    def graphs(self, data, content, filename):
+        # Extract necessary data
+        methods = list(data.keys())
+        accuracy_values = [data[key]['overall_accuracy'] for key in methods]
+        precision_values = [data[key]['overall_precision'] for key in methods]
+        recall_values = [data[key]['overall_recall'] for key in methods]
+
+        # Create bar graph
+        plt.figure(figsize=(10, 5))
+
+        plt.bar(methods, accuracy_values, color='b', width=0.2, align='center', label='Accuracy')
+        plt.bar(methods, precision_values, color='g', width=0.2, align='edge', label='Precision')
+        plt.bar(methods, recall_values, color='r', width=0.2, align='edge', label='Recall')
+
+        #plt.xlabel('Methods')
+        plt.ylabel('Scores')
+        plt.title('Comparison of Methods')
+
+        plt.legend()
+        plt.grid(False)
+        plt.xticks(rotation=75)
+
+        plt.tight_layout()
+
+        # Save the graph as an image
+        plt.savefig(filename + '.png')
+        content.append(Image(filename + '.png', width=600))
+        return content
+
+    def process_phrase(self, phrase):
+        # If the phrase is enclosed in parentheses, remove them
+        if phrase.startswith("(") and phrase.endswith(")"):
+            phrase = phrase[1:-1]
+        return phrase
+
+    def group_similar_phrases(self, phrases):
+        phrase_groups = defaultdict(list)
+        
+        for phrase in phrases:
+            phrase = self.process_phrase(phrase)
+            words = sorted(phrase.split())
+            key = tuple(words)
+            # Check if the phrase contains commas
+            if ',' in phrase:
+                phrase_groups[key].append(phrase)
+            else:
+                phrase_groups[key].append([phrase])
+        
+        return list(phrase_groups.values())
+
+
 
     def create_pdf(self):
         #print("output path:", self.output_pdf)
@@ -113,10 +165,10 @@ class Json_To_Pdf:
             json_data = json.load(f)
 
         doc = SimpleDocTemplate(self.output_pdf, pagesize=letter)
-        styles = getSampleStyleSheet()
+        self.styles = getSampleStyleSheet()
         content = []
 
-        title = Paragraph("<b>Results:</b>", styles["Title"])
+        title = Paragraph("<b>Evaluation Report:</b>", self.styles["Title"])
         content.append(title)
         content.append(Spacer(1, 12))
 
@@ -137,9 +189,23 @@ class Json_To_Pdf:
 
         # Apply table style
         table.setStyle(style)
-
-        # Add table to the document
-        doc.build([table])
+        content.append(table)
+        content = self.graphs(json_data, content, 'All')
+        methods = list(json_data.keys())
+        attacks = self.group_similar_phrases(methods)
+        print("methods", methods)
+        print("attacks", attacks)
+        for attack in attacks:
+            for options in attack:
+                for option in options:
+                    print("attack:" , option)
+                    compare = {}
+                    if option == 'Clean':
+                        continue
+                    elif option in methods:
+                        compare[option] = json_data[option]
+                #content = self.graphs(compare, content, option)
+        doc.build(content)
 
     # # Example usage:
     # json_file = "data.json"
