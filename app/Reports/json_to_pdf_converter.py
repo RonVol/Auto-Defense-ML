@@ -166,6 +166,7 @@ class Json_To_Pdf:
 
         doc = SimpleDocTemplate(self.output_pdf, pagesize=letter)
         self.styles = getSampleStyleSheet()
+        self.styles = getSampleStyleSheet()
         content = []
 
         title = Paragraph("<b>Evaluation Report:</b>", self.styles["Title"])

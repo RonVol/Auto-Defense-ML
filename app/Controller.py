@@ -4,6 +4,7 @@ import app.config as config
 from app.data_loader import DataLoader
 from app.Reports.report_generator import Report_Generator
 
+import matplotlib.pyplot as plt
 class Controller:
     def __init__(self, core : Main_Core, ui : Main_UI):
         self.core = core
