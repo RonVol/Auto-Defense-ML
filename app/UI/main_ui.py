@@ -107,9 +107,12 @@ class Main_UI:
 
     def on_proceed_with_selection(self):
         selected_option = dpg.get_value(self.param_config_option)
+        if(selected_option == ""):# if nothing is selected by clicking string is empty instead of default run
+            selected_option = "Run on Default Parameters"
+
         self.selected_attacks = [supported_attacks[attack] for attack in supported_attacks if dpg.get_value(f"attack_{attack}")]
         self.selected_defenses = [supported_defenses[defense] for defense in supported_defenses if dpg.get_value(f"defense_{defense}")]
-        
+
         if selected_option == "Configure Manually Attack and Defense Parameters":
             dpg.hide_item("Select Attacks and Defenses")  # Assuming this is the tag for the attack/defense selection window
             self.setup_parameter_configuration_window(self.selected_attacks, self.selected_defenses)
