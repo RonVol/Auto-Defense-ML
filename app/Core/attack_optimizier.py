@@ -3,13 +3,18 @@ from skopt.space import Real, Integer
 from app.Core.metrics_evaluator import MetricsEvaluator
 from app.Core.attack_executor import AttackExecutor
 from app.data_loader import DataLoader
+import numpy as np
 
 class AttackOptimizier:
-    def __init__(self,attack, dataloader, classifier):
+    def __init__(self,attack, dataloader, classifier, logger=None):
         self.attack = attack
         self.__dataloader = dataloader
         self.__classifier = classifier
         self.set_space()
+        self.alpha = 0.5  # Weight for the accuracy term
+        self.beta = 0.5   # Weight for the perturbation term
+        self.logger = logger
+        self.logger.info(f"OPTIMIZIER::INIT")
 
     def set_space(self):
         # Define a mapping of attack names to parameter names
@@ -58,6 +63,14 @@ class AttackOptimizier:
 
         return params
 
+    def update_logger(self,config,params, perturbation,accuracy):
+         attack_name = self.attack['name']
+         if attack_name in self.attack_param_mapping:
+              param_names = self.attack_param_mapping[attack_name]
+              attack_params = dict(zip(param_names, params))
+         self.logger.info(f"OPTIMIZIER::{attack_name}::{attack_params}::perturbation={perturbation}, accuracy={accuracy}, objective={self.alpha*perturbation+self.beta*accuracy}")
+
+         
 
     def optimize(self):
         # Define the objective function to be minimized
@@ -74,18 +87,31 @@ class AttackOptimizier:
             else:
                 raise ValueError(f"Unsupported attack for optimization: {attack_name}")
             
-            executor = AttackExecutor(attack_config, self.__classifier, self.__dataloader.clip_values)
-            x_adv = executor.execute_attack(self.__dataloader.x)
-            evaluator = MetricsEvaluator(self.__classifier, x_adv, self.__dataloader.y)
-            metrics = evaluator.get_metrics()
+            try:
+                executor = AttackExecutor(attack_config, self.__classifier, self.__dataloader.clip_values)
+                x_adv = executor.execute_attack(self.__dataloader.x)
+                evaluator = MetricsEvaluator(self.__classifier, x_adv, self.__dataloader.y)
+                metrics = evaluator.get_metrics()
+
+                # Calculate the perturbation size 
+                perturbation = np.mean(np.linalg.norm(self.__dataloader.x - x_adv, axis=1))         
+                # Combine the objectives
+                combined_objective = self.alpha * metrics['overall_accuracy'] + self.beta * perturbation
+                self.update_logger(attack_config,params,perturbation,metrics['overall_accuracy'] )
+                return combined_objective
+            except Exception as e:
+                # Handle potential errors during attack execution and evaluation
+                print(f"Error during attack optimization execution: {e}")
+                return float('inf')  # Return a large value to indicate failure
             
-            return 1 - metrics['overall_accuracy']
+            
 
         # Perform Bayesian optimization
         result = gp_minimize(objective, self.space, n_calls=10, random_state=0)
         
         optimized_params = dict(zip(self.attack_param_mapping[attack_name], result.x))
         optimized_params = self.validate_parameters_format(optimized_params)
+        self.logger.info(f"OPTIMIZIER-FINAL::{attack_name}::{optimized_params}::Objective={result.fun}::models={result.models}")
 
         optimized_attack = self.attack.copy()
         optimized_attack.update(optimized_params)
