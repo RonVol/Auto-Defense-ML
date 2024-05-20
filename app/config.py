@@ -74,7 +74,15 @@ supported_attacks = {
 supported_defenses = {
     "FeatureSqueezing": {
         "name": "FeatureSqueezing",
+        "attack_type" : "preprocessor",
         "bit_depth": 3,
+        "apply_fit": False,
+        "apply_predict": True,
+        "applicable_to": ["XGBoost"]
+    },
+    "ClassLabels": {
+        "name": "ClassLabels",
+        "attack_type" : "postprocessor",
         "apply_fit": False,
         "apply_predict": True,
         "applicable_to": ["XGBoost"]

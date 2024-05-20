@@ -1,4 +1,5 @@
-from art.defences.preprocessor import ThermometerEncoding, FeatureSqueezing
+from art.defences.preprocessor import FeatureSqueezing
+from art.defences.postprocessor.class_labels import ClassLabels
 # Import other attacks as needed
 
 class DefenseApplier:
@@ -34,27 +35,32 @@ class DefenseApplier:
 
             defense =  FeatureSqueezing(bit_depth=bit_depth,apply_fit=apply_fit,apply_predict=apply_predict,clip_values=self.clip_values)
             return defense
-        
-        elif defense_name == 'ThermometerEncoding':
-            clip_values = self.clip_values
-            num_space = self.defense_config.get('num_space')
-            channels_first = self.defense_config.get('channels_first')
+        elif defense_name == 'ClassLabels':
             apply_fit = self.defense_config.get('apply_fit')
             apply_predict = self.defense_config.get('apply_predict')
-            print(f"in thermo, clipvalus:{type(clip_values)} , {clip_values}")
-            defense =  ThermometerEncoding(clip_values=clip_values,apply_fit=apply_fit,apply_predict=apply_predict,num_space=num_space,channels_first=channels_first)
-            return defense
+            return ClassLabels(apply_fit=apply_fit,apply_predict=apply_predict)
         else:
             raise ValueError(f"Unsupported defense: {defense_name}")
-
-    def apply_defense(self, x):
-        """
-        Applies the initialized defense to the input data.
-        
-        :param x: The input data to which the defense will be applied. Expected to be in a flattened format.
-        :return: The defended input data, reshaped back to its original flattened format.
-        """
-        print(f"x before:{x.shape}")
-        x_defended,_ = self.defense(x)
-        print(f"x after:{x_defended.shape}")
+    
+    def apply_preprocessor(self, x):
+        x_defended, _ = self.defense(x)
         return x_defended
+    
+    def apply_postprocessor(self, y_pred):
+        return self.defense(y_pred)
+    
+    def is_preprocessor(self):
+        print(f"in is_preprocessor :{self.defense_config['attack_type']}")
+        try:
+            if self.defense_config['attack_type'] == "preprocessor" : 
+                return True         
+            else:
+                return False
+        except Exception as e:
+                print(f"Error in defense_applier.is_preprocessor(): {e}")
+
+    def apply_defense(self, x=None, y_pred=None):
+        if self.is_preprocessor():
+            return self.apply_preprocessor(x)
+        else:
+            return self.apply_postprocessor(y_pred) # postprocessor

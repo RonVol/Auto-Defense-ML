@@ -59,10 +59,9 @@ class Main_Core:
 
         optimized_attacks = []
         for attack in attacks:
-            att_optimizer = AttackOptimizier(attack,self.__dataloader,self.__classifier)
+            att_optimizer = AttackOptimizier(attack,self.__dataloader,self.__classifier, logger=self.logger)
             optimized_att = att_optimizer.optimize()
             optimized_attacks.append(optimized_att)
-            self.logger.info(f"Optimized parameters: {optimized_att}")
         return optimized_attacks
     
     @requires_dataloader
@@ -87,13 +86,20 @@ class Main_Core:
         clip_values = self.__dataloader.clip_values
         metrics = {}
         defended_examples = {}
-        for defense in defenses:
 
+        for defense in defenses:
             applier = DefenseApplier(defense_config=defense, model=self.__classifier,clip_values=clip_values)
-            x_defended = applier.apply_defense(x_org)
-            evaluator = MetricsEvaluator(self.__classifier, x_defended, y_org)
+            if applier.is_preprocessor():
+                x_defended = applier.apply_defense(x=x_org)
+                evaluator = MetricsEvaluator(self.__classifier, x_defended, y_org)
+                defended_examples[defense['name']] = x_defended
+            else:
+                evaluator = MetricsEvaluator(self.__classifier, x_org, y_org, postprocessor=applier.defense)
+                defended_examples[defense['name']] = None
+
             metrics[defense['name']] = evaluator.get_metrics()
-            defended_examples[defense['name']] = x_defended
+            
+
         return metrics, defended_examples
     
     @requires_dataloader
@@ -102,13 +108,21 @@ class Main_Core:
         clip_values = self.__dataloader.clip_values
         metrics = {}
         adv_defended_examples = {}
+
         for defense in defenses:
             applier = DefenseApplier(defense_config=defense, model=self.__classifier,clip_values=clip_values)
-            for att_name, adv_ex in adv_examples.items():         
-                x_adv_defended = applier.apply_defense(adv_ex)
-                evaluator = MetricsEvaluator(self.__classifier, x_adv_defended, y_org)
+
+            for att_name, adv_ex in adv_examples.items():
+                if applier.is_preprocessor():
+                    x_adv_defended = applier.apply_defense(x=adv_ex)
+                    evaluator = MetricsEvaluator(self.__classifier, x_adv_defended, y_org)
+                    adv_defended_examples[defense['name'], att_name] = x_adv_defended
+                else:
+                    evaluator = MetricsEvaluator(self.__classifier, adv_ex, y_org, postprocessor=applier.defense)
+                    adv_defended_examples[defense['name'], att_name] = None
+
                 metrics[defense['name'], att_name] = evaluator.get_metrics()
-                adv_defended_examples[defense['name'], att_name] = x_adv_defended
+                
 
         return metrics, adv_defended_examples
     
