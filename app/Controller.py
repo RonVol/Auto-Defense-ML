@@ -20,15 +20,17 @@ class Controller:
         dataloader, is_success, message = self.create_dataloader(model_path, selected_library, x_path, y_path)
         print(message)
         self.dataloader = dataloader
+        self.core.dataloader = self.dataloader
         return is_success
     
     def handle_configuration(self, selected_attacks, selected_defenses, chosen_run):
-        print("in handle_configuration")
+        print("in handle_configuration, chosen run =",chosen_run) 
         if chosen_run == 1: # default parameters or manually configured
-            print("in handle_configuration chosen_run == 1")
             self.start_main_pipeline(selected_attacks, selected_defenses)
         elif chosen_run == 2: # optimize
-            self.start_main_pipeline(selected_attacks, selected_defenses)
+            self.ui.update_progress("Performing attack optimization...")
+            optimized_attacks = self.core.optimize_attacks(selected_attacks)
+            self.start_main_pipeline(optimized_attacks, selected_defenses)
 
 
     def run_ui(self):
@@ -36,7 +38,7 @@ class Controller:
     
     def start_main_pipeline(self,attacks, defenses):
         print("in start_main_pipelin")
-        self.core.dataloader = self.dataloader
+        
         self.ui.update_progress("Performing benign evaluation...")
         clean_metrics = self.core.perform_benign_evaluation()
         self.ui.update_progress("perform_attacks...")
