@@ -96,7 +96,7 @@ class AttackOptimizier:
                 # Calculate the perturbation size 
                 perturbation = np.mean(np.linalg.norm(self.__dataloader.x - x_adv, axis=1))         
                 # Combine the objectives
-                combined_objective = self.alpha * metrics['overall_accuracy'] + self.beta * perturbation
+                combined_objective = metrics['overall_accuracy']
                 self.update_logger(attack_config,params,perturbation,metrics['overall_accuracy'] )
                 return combined_objective
             except Exception as e:
