@@ -8,6 +8,7 @@ from app.Core.metrics_evaluator import MetricsEvaluator
 from app.Core.attack_executor import AttackExecutor
 from app.Core.defense_applier import DefenseApplier
 from app.Core.attack_optimizier import AttackOptimizier
+from app.Core.defense_optimizier import DefensekOptimizier
 import logging
 
 
@@ -78,6 +79,17 @@ class Main_Core:
             metrics[att['name']] = evaluator.get_metrics()
             adv_examples[att['name']] = x_adv
         return metrics, adv_examples
+
+
+    def optimize_defenses(self, defenses):
+        print("in optimize defenses")
+
+        optimized_defenses = []
+        for defense in defenses:
+            def_optimizer = DefensekOptimizier(defense,self.__dataloader,self.__classifier, logger=self.logger)
+            optimized_def = def_optimizer.optimize()
+            optimized_defenses.append(optimized_def)
+        return optimized_defenses
     
     @requires_dataloader
     def perform_defenses(self, defenses):
