@@ -30,6 +30,8 @@ class Controller:
         elif chosen_run == 2: # optimize
             self.ui.update_progress("Performing attack optimization...")
             optimized_attacks = self.core.optimize_attacks(selected_attacks)
+            self.ui.update_progress("Performing defense optimization...")
+            optimized_defenses = self.core.optimize_defenses(selected_defenses)
             self.start_main_pipeline(optimized_attacks, selected_defenses)
 
 
