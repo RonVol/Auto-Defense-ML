@@ -7,11 +7,18 @@ import numpy as np
 from matplotlib import pyplot as plt
 import os
 import json
+import datetime
+import uuid
+
+current_time = datetime.datetime.now()
+timestamp_str = current_time.strftime("%Y-%m-%d_%H-%M-%S")
+unique_id = str(uuid.uuid4()).split('-')[0]
+filename = f"{timestamp_str}_{unique_id}"
 
 class Json_To_Pdf:
     def __init__(self, json_file, data, adv_examples):
         self.json_file = json_file
-        self.output_pdf = os.getcwd()+"/"+self.json_file[:-5]+".pdf"
+        self.output_pdf = os.getcwd()+"/Reports/"+filename+self.json_file[:-5]+".pdf"
         self.data = data
         self.adv = adv_examples
 
