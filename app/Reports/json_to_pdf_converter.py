@@ -13,12 +13,12 @@ import uuid
 current_time = datetime.datetime.now()
 timestamp_str = current_time.strftime("%Y-%m-%d_%H-%M-%S")
 unique_id = str(uuid.uuid4()).split('-')[0]
-filename = f"{timestamp_str}_{unique_id}"
+filename = "metrics"+timestamp_str+"-"+unique_id
 
 class Json_To_Pdf:
     def __init__(self, json_file, data, adv_examples):
         self.json_file = json_file
-        self.output_pdf = os.getcwd()+"/Reports/"+filename+self.json_file[:-5]+".pdf"
+        self.output_pdf = os.path.dirname(os.path.realpath(filename))+"/app/Reports/"+filename+".pdf"
         self.data = data
         self.adv = adv_examples
 
@@ -143,29 +143,6 @@ class Json_To_Pdf:
         content.append(Image(filename + '.png', width=600))
         return content
 
-    def process_phrase(self, phrase):
-        # If the phrase is enclosed in parentheses, remove them
-        if phrase.startswith("(") and phrase.endswith(")"):
-            phrase = phrase[1:-1]
-        return phrase
-
-    def group_similar_phrases(self, phrases):
-        phrase_groups = defaultdict(list)
-        
-        for phrase in phrases:
-            phrase = self.process_phrase(phrase)
-            words = sorted(phrase.split())
-            key = tuple(words)
-            # Check if the phrase contains commas
-            if ',' in phrase:
-                phrase_groups[key].append(phrase)
-            else:
-                phrase_groups[key].append([phrase])
-        
-        return list(phrase_groups.values())
-
-
-
     def create_pdf(self):
         #print("output path:", self.output_pdf)
         with open(self.json_file, 'r') as f:
@@ -200,20 +177,24 @@ class Json_To_Pdf:
         content.append(table)
         content = self.graphs(json_data, content, 'All')
         methods = list(json_data.keys())
-        attacks = self.group_similar_phrases(methods)
-        print("methods", methods)
-        print("attacks", attacks)
-        for attack in attacks:
-            for options in attack:
-                for option in options:
-                    print("attack:" , option)
-                    compare = {}
-                    if option == 'Clean':
-                        continue
-                    elif option in methods:
-                        compare[option] = json_data[option]
-                #content = self.graphs(compare, content, option)
+        grouped = []
+        for method in methods:
+            for other_method in methods:
+                if method == other_method:
+                    continue
+                else:
+                    if other_method in method:
+                        grouped.append([method, other_method])
+        print(grouped)
+        for vs in grouped:
+            compare = {}
+            for run in vs:
+                compare[run] = json_data[run]
+            content = self.graphs(compare, content, run)
         doc.build(content)
+        for filename in os.listdir(os.getcwd()):
+            if filename.endswith('.png'):
+                os.remove(os.path.join(os.getcwd(), filename))
 
     # # Example usage:
     # json_file = "data.json"
