@@ -22,7 +22,9 @@ class AttackOptimizier:
             'ZooAttack': ["learning_rate", "initial_const", "max_iter"],
             'HopSkipJump': ["init_size", "init_eval", "max_iter"],
             'SignOPTAttack': ["epsilon", "max_iter"],
-            'BoundaryAttack': ["epsilon", "max_iter"]
+            'BoundaryAttack': ["epsilon", "max_iter"],
+            'Papernot_DT_Attack': ["offset"],
+            'SamplingAttack': ["eps", "n_trials"]
         }
         attack_name = self.attack['name']
         if attack_name == 'ZooAttack':
@@ -50,6 +52,15 @@ class AttackOptimizier:
                 Real(1e-3, 1e-1, name="epsilon"),
                 Integer(80, 120, name="max_iter")
             ]
+        elif attack_name == 'Papernot_DT_Attack':
+            self.space = [
+                Real(1e-3, 1e-2, name="offset")
+            ]
+        elif attack_name == 'SamplingAttack':
+            self.space = [
+                Real(0.05, 0.2, name="eps"),
+                Integer(50, 150, name="n_trials")
+            ]
         else:
             raise ValueError(f"Unsupported attack for optimization: {attack_name}")
 
@@ -60,6 +71,8 @@ class AttackOptimizier:
                 params["init_size"] = int(params["init_size"])
         if "init_eval" in params:
                 params["init_eval"] = int(params["init_eval"])
+        if "n_trials" in params:
+                params["n_trials"] = int(params["n_trials"])
 
         return params
 

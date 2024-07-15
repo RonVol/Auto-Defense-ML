@@ -1,4 +1,4 @@
-from art.attacks.evasion import ZooAttack, HopSkipJump, SignOPTAttack, BoundaryAttack
+from art.attacks.evasion import ZooAttack, HopSkipJump, SignOPTAttack, BoundaryAttack, DecisionTreeAttack, CubeAttack, SamplingAttack
 import numpy as np
 # Import other attacks as needed
 
@@ -92,6 +92,27 @@ class AttackExecutor:
                                     epsilon=epsilon,targeted=targeted,delta=delta,step_adapt=step_adapt,
                                     num_trial=num_trial,sample_size=sample_size,init_size=init_size,min_epsilon=min_epsilon)
             return attack
+        
+        elif attack_name == 'Papernot_DT_Attack':
+            offset = self.attack_config.get('offset')
+            attack = DecisionTreeAttack(classifier=self.model, offset=offset)
+            return attack
+        
+        elif attack_name == 'SamplingAttack':
+            eps = self.attack_config.get('eps')
+            n_trials = self.attack_config.get('n_trials')
+            attack = SamplingAttack(estimator=self.model, eps=eps,n_trials=n_trials,min_val=self.clip_values[0], max_val=self.clip_values[1])
+
+            return attack
+        
+        elif attack_name == 'CubeAttack':
+            eps = self.attack_config.get('eps')
+            n_trials = self.attack_config.get('n_trials')
+            p = self.attack_config.get('p')
+            attack = CubeAttack(estimator=self.model, eps=eps,n_trials=n_trials, p=p)
+
+            return attack
+        
         else:
             raise ValueError(f"Unsupported attack: {attack_name}")
 

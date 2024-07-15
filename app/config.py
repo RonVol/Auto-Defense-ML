@@ -71,6 +71,12 @@ supported_attacks = {
         "min_epsilon":0.0,
         "applicable_to": ["XGBoost", "scikit-learn"]
     },
+    "Papernot_DT_Attack": {
+        "name": "Papernot_DT_Attack",
+        "type":"black-box",
+        "offset": 0.001,
+        "applicable_to": ["scikit-learn"]
+    },
     "CubeAttack": {
         "name": "CubeAttack",
         "type":"black-box",
@@ -79,6 +85,13 @@ supported_attacks = {
         "p":0.5,
         "independent_delta":False,
         "applicable_to": ["XGBoost"]
+    },
+    "SamplingAttack": {
+        "name": "SamplingAttack",
+        "type":"black-box",
+        "eps": 0.1,
+        "n_trials":100,
+        "applicable_to": ["XGBoost","scikit-learn"]
     },
 }
 
