@@ -4,9 +4,11 @@ import jsonschema
 supported_libraries = {
     "XGBoost": {
         "name": "XGBoost",
-        "requirements": ["model", "nb_features", "nb_classes"],
-        "supported_attacks": ["FGSM"],
-        "supported_defenses": []
+        "requirements": ["model", "nb_features", "nb_classes"]
+    },
+    "scikit-learn": {
+        "name": "scikit-learn",
+        "requirements": ["model", "nb_features", "nb_classes"]
     },
 }
 
@@ -26,7 +28,7 @@ supported_attacks = {
         "abort_early": True,
         "use_resize": False,
         "variable_h":0.2,
-        "applicable_to": ["XGBoost"]
+        "applicable_to": ["XGBoost", "scikit-learn"]
     },
     "HopSkipJump": {
         "name": "HopSkipJump",
@@ -38,7 +40,7 @@ supported_attacks = {
         "init_eval": 100,
         "init_size": 100,
         "norm":2,
-        "applicable_to": ["XGBoost"]
+        "applicable_to": ["XGBoost", "scikit-learn"]
     },
     "SignOPTAttack": { # self.clip_min not defined, bug in ART ? temporary fix by defining it manually in executor
         "name": "SignOPTAttack",
@@ -52,7 +54,7 @@ supported_attacks = {
         "alpha": 0.2,
         "beta": 0.001,
         "batch_size": 1,
-        "applicable_to": ["XGBoost"]
+        "applicable_to": ["XGBoost", "scikit-learn"]
     },
     "BoundaryAttack": {
         "name": "BoundaryAttack",
@@ -67,6 +69,15 @@ supported_attacks = {
         "sample_size": 20,
         "init_size": 100,
         "min_epsilon":0.0,
+        "applicable_to": ["XGBoost", "scikit-learn"]
+    },
+    "CubeAttack": {
+        "name": "CubeAttack",
+        "type":"black-box",
+        "eps": 0.1,
+        "n_trials":100,
+        "p":0.5,
+        "independent_delta":False,
         "applicable_to": ["XGBoost"]
     },
 }
@@ -74,18 +85,25 @@ supported_attacks = {
 supported_defenses = {
     "FeatureSqueezing": {
         "name": "FeatureSqueezing",
-        "attack_type" : "preprocessor",
+        "defense_type" : "preprocessor",
         "bit_depth": 3,
         "apply_fit": False,
         "apply_predict": True,
-        "applicable_to": ["XGBoost"]
+        "applicable_to": ["XGBoost", "scikit-learn"]
     },
     "ClassLabels": {
         "name": "ClassLabels",
-        "attack_type" : "postprocessor",
+        "defense_type" : "postprocessor",
         "apply_fit": False,
         "apply_predict": True,
-        "applicable_to": ["XGBoost"]
+        "applicable_to": ["XGBoost", "scikit-learn"]
+    },
+    "TTTS": {
+        "name": "TTTS",
+        "defense_type" : "new_classifier",
+        "prob_type": "depth",
+        "n_simulations": 10,
+        "applicable_to": ["scikit-learn"]
     },
 }
 

@@ -1,5 +1,6 @@
 import xgboost as xgb
 import numpy as np
+import joblib
 
 class DataLoader:
     def __init__(self):
@@ -22,16 +23,22 @@ class DataLoader:
         return self.__y_test
 
     def load_model(self,library, path_to_model) -> bool:
-        #switch case on whitch library...
-        #if library is xgboost...
+        lib_name = library['name']
         try:
-            self.__model = xgb.XGBClassifier()
-            self.__model.load_model(path_to_model)
-            print(f"Model loaded from {path_to_model}")
+            if lib_name == 'XGBoost':
+                self.__model = xgb.XGBClassifier()
+                self.__model.load_model(path_to_model)
+                print(f"XGBoost model loaded from {path_to_model}")
+            elif lib_name == 'scikit-learn':
+                self.__model = joblib.load(path_to_model)
+                print(f"scikit-learn model loaded from {path_to_model}")
+            else:
+                print(f"Unsupported library: {lib_name}")
+                return False
             return True
-        except:
-            print(f"Failed to load model from {path_to_model}")
-        return False
+        except Exception as e:
+            print(f"Failed to load model from {path_to_model}. Error: {str(e)}")
+            return False
     
     def load_test(self,x_test_path=None,y_test_path=None, y_test_proba_fpath=None):
         # if .npy extension...

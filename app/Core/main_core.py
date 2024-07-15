@@ -1,14 +1,17 @@
 from art.estimators.classification import XGBoostClassifier
+from art.estimators.classification import SklearnClassifier
 from xgboost import Booster, XGBClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
 import xgboost as xgb
 from app.data_loader import DataLoader
 from app.config import supported_libraries, supported_attacks, supported_defenses
-from art.attacks.evasion import ZooAttack
 from app.Core.metrics_evaluator import MetricsEvaluator
 from app.Core.attack_executor import AttackExecutor
 from app.Core.defense_applier import DefenseApplier
 from app.Core.attack_optimizier import AttackOptimizier
 from app.Core.defense_optimizier import DefensekOptimizier
+
 import logging
 
 
@@ -41,6 +44,7 @@ class Main_Core:
         """The setter method for the dataloader property."""
         if not isinstance(dataloader, DataLoader):
             raise ValueError("dataloader must be an instance of DataLoader")
+        print(f"in core set dataloader={dataloader}")
         self.__dataloader = dataloader
         self.setup_art_classifier() # sets self.classifier wrapped in ART classifier
 
@@ -98,8 +102,16 @@ class Main_Core:
         clip_values = self.__dataloader.clip_values
         metrics = {}
         defended_examples = {}
-
+        
         for defense in defenses:
+            if defense['defense_type'] == "new_classifier":
+                applier = DefenseApplier(defense_config=defense, model=self.__dataloader.model,clip_values=clip_values)
+                new_classifier =  applier.defense
+                evaluator = MetricsEvaluator(new_classifier, x_org, y_org, use_predict_proba=True)
+                defended_examples[defense['name']] = x_org
+                metrics[defense['name']] = evaluator.get_metrics()
+                continue
+
             applier = DefenseApplier(defense_config=defense, model=self.__classifier,clip_values=clip_values)
             if applier.is_preprocessor():
                 x_defended = applier.apply_defense(x=x_org)
@@ -122,8 +134,16 @@ class Main_Core:
         adv_defended_examples = {}
 
         for defense in defenses:
+            if defense['defense_type'] == "new_classifier":
+                applier = DefenseApplier(defense_config=defense, model=self.__dataloader.model,clip_values=clip_values)
+                new_classifier =  applier.defense
+                for att_name, adv_ex in adv_examples.items():
+                    evaluator = MetricsEvaluator(new_classifier, adv_ex, y_org, use_predict_proba=True)
+                    adv_defended_examples[defense['name'], att_name] = adv_ex      
+                    metrics[defense['name'], att_name] = evaluator.get_metrics()
+                continue
+        
             applier = DefenseApplier(defense_config=defense, model=self.__classifier,clip_values=clip_values)
-
             for att_name, adv_ex in adv_examples.items():
                 if applier.is_preprocessor():
                     x_adv_defended = applier.apply_defense(x=adv_ex)
@@ -170,14 +190,18 @@ class Main_Core:
             evaluator.print_metrics(by_class=by_class)
             print("\n")  # Add an empty line for better readability between section
 
-
-
+    
     def setup_art_classifier(self):
         model = self.__dataloader.model
         nb_features=self.__dataloader.nb_features
         nb_classes=self.__dataloader.nb_classes
-        if isinstance(model,Booster) or isinstance(model, XGBoostClassifier) or isinstance(model, xgb.XGBClassifier):
+        if isinstance(model, (Booster, XGBoostClassifier, xgb.XGBClassifier)):
             self.__classifier = XGBoostClassifier(model=model, nb_features=nb_features, nb_classes=nb_classes)
+
+        elif isinstance(model, (DecisionTreeClassifier, RandomForestClassifier)):
+            self.__classifier = SklearnClassifier(model=model)
+        else:
+            raise ValueError(f"main_core.setup_art_classifier()::Unsupported model type: {type(model)}")
 
 
 

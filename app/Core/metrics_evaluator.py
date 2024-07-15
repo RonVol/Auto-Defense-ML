@@ -5,7 +5,7 @@ class MetricsEvaluator:
     """
     The MetricsEvaluator class is designed to compute and store various performance metrics for a given machine learning model.
     """
-    def __init__(self, model, x_test, y_test, postprocessor=None):
+    def __init__(self, model, x_test, y_test, postprocessor=None, use_predict_proba=False):
         """
         Initializes the MetricsEvaluator with a model and test dataset.
         
@@ -16,6 +16,7 @@ class MetricsEvaluator:
         self.classifier = model
         self.x_test = x_test
         self.postprocessor = postprocessor
+        self.use_predict_proba = use_predict_proba
         # Check if y_test is one-hot encoded and convert it to label encoding if true
         if len(y_test.shape) == 2 and y_test.shape[1] > 1:
             self.y_test = np.argmax(y_test, axis=1)
@@ -30,7 +31,11 @@ class MetricsEvaluator:
         
         :return: The predicted labels, converted from one-hot encoding if necessary.
         """
-        y_pred = self.classifier.predict(self.x_test)
+        if self.use_predict_proba:
+          y_pred = self.classifier.predict_proba(self.x_test)
+        else:
+          y_pred = self.classifier.predict(self.x_test)
+
         if y_pred is None:
             raise ValueError("The classifier returned None as predictions.")
         print(f"*y_pred = {y_pred}")
