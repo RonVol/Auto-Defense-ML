@@ -113,6 +113,7 @@ class Main_UI:
                 dpg.add_text("Select Attacks")
                 for attack in supported_attacks:
                     supported_lib = supported_attacks[attack]["applicable_to"]
+                    print(dpg.get_value(self.library_id))
                     if dpg.get_value(self.library_id) in supported_lib:
                         dpg.add_checkbox(label=attack, tag=f"attack_{attack}")
 
@@ -410,10 +411,7 @@ class Main_UI:
                 success = self.controller.handle_load(model_path, x_path, y_path, selected_library)
                 if success:
                     dpg.hide_item("Main_Window")  # Assuming "Main Window" is the tag of the main window
-                    if not dpg.does_item_exist("Select Attacks and Defenses"):
-                        self.setup_attack_defense_window()
-                    else:
-                        dpg.show_item("Select Attacks and Defenses")
+                    self.setup_attack_defense_window()
                 # else:
                 #     self.create_popup("Loading unsuccessful, please choose appropriate files","Main_Window")
             except Exception as e:
