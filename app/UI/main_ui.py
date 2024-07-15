@@ -106,42 +106,42 @@ class Main_UI:
                 
 
     def setup_attack_defense_window(self):
-        if not dpg.does_item_exist("Select Attacks and Defenses"):
-            with dpg.window(label="Select Attacks and Defenses",tag="Select Attacks and Defenses", width=1280, height=720, no_move=True):
-                with dpg.group(horizontal=False):
-                    dpg.add_text("Select Attacks")
-                    for attack in supported_attacks:
-                        supported_lib = supported_attacks[attack]["applicable_to"]
-                        if dpg.get_value(self.library_id) in supported_lib:
-                            dpg.add_checkbox(label=attack, tag=f"attack_{attack}")
+        if dpg.does_item_exist("Select Attacks and Defenses"):
+            dpg.delete_item("Select Attacks and Defenses")
+        with dpg.window(label="Select Attacks and Defenses",tag="Select Attacks and Defenses", width=1280, height=720, no_move=True):
+            with dpg.group(horizontal=False):
+                dpg.add_text("Select Attacks")
+                for attack in supported_attacks:
+                    supported_lib = supported_attacks[attack]["applicable_to"]
+                    if dpg.get_value(self.library_id) in supported_lib:
+                        dpg.add_checkbox(label=attack, tag=f"attack_{attack}")
 
-                    dpg.add_button(label="Select All Attacks", callback=lambda: self.select_all(True, supported_attacks, prefix="attack_"))
-                    dpg.add_button(label="Select None Attacks", callback=lambda: self.select_all(False, supported_attacks, prefix="attack_"))
-
-                    dpg.add_separator()
-
-                    dpg.add_text("Select Defenses")
-                    for defense in supported_defenses:
-                        supported_lib = supported_defenses[defense]["applicable_to"]
-                        if dpg.get_value(self.library_id) in supported_lib:
-                            dpg.add_checkbox(label=defense, tag=f"defense_{defense}")
-
-                    dpg.add_button(label="Select All Defenses", callback=lambda: self.select_all(True, supported_defenses, prefix="defense_"))
-                    dpg.add_button(label="Select None Defenses", callback=lambda: self.select_all(False, supported_defenses, prefix="defense_"))
+                dpg.add_button(label="Select All Attacks", callback=lambda: self.select_all(True, supported_attacks, prefix="attack_"))
+                dpg.add_button(label="Select None Attacks", callback=lambda: self.select_all(False, supported_attacks, prefix="attack_"))
 
                 dpg.add_separator()
-                with dpg.group(horizontal=False):
-                    dpg.add_text("Parameter Configuration Options")
-                    with dpg.group():
-                        # Using a radio button for exclusive selection
-                        self.param_config_option = dpg.add_radio_button(["Run on Default Parameters", 
-                                                                        "Optimize Attack and Defense Parameters", 
-                                                                        "Configure Manually Attack and Defense Parameters"],tag="parameter_config", 
-                                                                        horizontal=False)
-                    dpg.add_button(label="Proceed",tag="proceed_with_selection", callback=self.on_proceed_with_selection, user_data="Select Attacks and Defenses")
-                    dpg.add_button(label="back", callback=self.back_to_loading)
-        else:
-            dpg.show_item("Select Attacks and Defenses")
+
+                dpg.add_text("Select Defenses")
+                for defense in supported_defenses:
+                    supported_lib = supported_defenses[defense]["applicable_to"]
+                    if dpg.get_value(self.library_id) in supported_lib:
+                        dpg.add_checkbox(label=defense, tag=f"defense_{defense}")
+
+                dpg.add_button(label="Select All Defenses", callback=lambda: self.select_all(True, supported_defenses, prefix="defense_"))
+                dpg.add_button(label="Select None Defenses", callback=lambda: self.select_all(False, supported_defenses, prefix="defense_"))
+
+            dpg.add_separator()
+            with dpg.group(horizontal=False):
+                dpg.add_text("Parameter Configuration Options")
+                with dpg.group():
+                    # Using a radio button for exclusive selection
+                    self.param_config_option = dpg.add_radio_button(["Run on Default Parameters", 
+                                                                    "Optimize Attack and Defense Parameters", 
+                                                                    "Configure Manually Attack and Defense Parameters"],tag="parameter_config", 
+                                                                    horizontal=False)
+                dpg.add_button(label="Proceed",tag="proceed_with_selection", callback=self.on_proceed_with_selection, user_data="Select Attacks and Defenses")
+                dpg.add_button(label="back", callback=self.back_to_loading)
+        
         
 
 
