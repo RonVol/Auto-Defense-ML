@@ -11,19 +11,31 @@ import os
 import json
 import datetime
 import uuid
+import platform
 
 current_time = datetime.datetime.now()
-timestamp_str = current_time.strftime("%Y-%m-%d_%H-%M-%S")
+timestamp_str = current_time.strftime("%Y-%m-%d_%H-%M")
 unique_id = str(uuid.uuid4()).split('-')[0]
 filename = "metrics"+timestamp_str+"-"+unique_id
 
-
+def get_os_type():
+    os_type = platform.system()
+    if os_type == "Windows":
+        return "Windows"
+    elif os_type == "Darwin":
+        return "macOS"
+    elif os_type == "Linux":
+        return "Linux"
+    else:
+        return "Unknown"
+    
 class Json_To_Pdf:
     def __init__(self, json_file, data, adv_examples):
         self.json_file = json_file
         self.output_pdf = os.path.dirname(os.path.realpath(filename))+"/app/Reports/"+filename+".pdf"
         self.data = data
         self.adv = adv_examples
+        self.path = os.path.dirname(os.path.abspath(__file__))+"/"+filename+".pdf"
         with open(self.json_file, 'r') as f:
             json_data = json.load(f)
         methods = list(json_data.keys())
@@ -32,7 +44,18 @@ class Json_To_Pdf:
             self.attacks.append("HopSkipJump")
         self.defenses = [x for x in methods if x not in self.attacks and "(" not in x]
         self.defenses.remove("Clean")
-
+        
+    def open_pdf(self):
+            #try:
+            system = get_os_type()
+            if os.path.exists(self.path):
+                # Open the PDF file with the default system viewer
+                if system == "Windows":
+                    os.startfile(self.path)  # For Windows
+                if system == "macOS":
+                    os.system(f'open "{self.path}"')
+                if system == "Linux":
+                    os.system(f'xdg-open "{self.path}"')
     def is_numeric_array(arr):
         return all(isinstance(item, (int, float)) for item in arr)
 
@@ -351,6 +374,7 @@ class Json_To_Pdf:
         for filename in os.listdir(os.getcwd()):
             if filename.endswith('.png'):
                 os.remove(os.path.join(os.getcwd(), filename))
+        self.open_pdf()
 
 
     # # Example usage:
