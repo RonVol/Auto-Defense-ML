@@ -31,7 +31,6 @@ class DefenseApplier:
         :return: An instance of the specified defense.
         """
         defense_name = self.defense_config['name']
-        print(f"\n\nIN INIT DEFENSE:{self.model}\n\n")
         if self.defense_config['defense_type'] == "new_classifier":
             if defense_name == 'TTTS':
                 prob_type = self.defense_config.get('prob_type')
@@ -69,7 +68,6 @@ class DefenseApplier:
         return self.defense(y_pred)
     
     def is_preprocessor(self):
-        print(f"in is_preprocessor :{self.defense_config['defense_type']}")
         try:
             if self.defense_config['defense_type'] == "preprocessor" : 
                 return True         

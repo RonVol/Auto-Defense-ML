@@ -38,14 +38,11 @@ class MetricsEvaluator:
 
         if y_pred is None:
             raise ValueError("The classifier returned None as predictions.")
-        print(f"*y_pred = {y_pred}")
         
         if y_pred.shape[1] > 1:  # Check if y_pred is probabilities (one-hot encoded)
             if self.postprocessor:
                 y_pred = self.postprocessor(y_pred)
-                print(f"**y_pred = {y_pred}")
             y_pred_labels = np.argmax(y_pred, axis=1)
-            print(f"***y_pred_argmax = {y_pred_labels}")
             return y_pred_labels
         else:
             if self.postprocessor:
