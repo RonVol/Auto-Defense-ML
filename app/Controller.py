@@ -28,11 +28,13 @@ class Controller:
         if chosen_run == 1: # default parameters or manually configured
             self.start_main_pipeline(selected_attacks, selected_defenses)
         elif chosen_run == 2: # optimize
-            self.ui.update_progress("Performing attack optimization...")
+            if len(selected_attacks) != 0:
+                self.ui.update_progress("Performing attack optimization...")
             optimized_attacks = self.core.optimize_attacks(selected_attacks)
-            self.ui.update_progress("Performing defense optimization...")
+            if len(selected_defenses) != 0:
+                self.ui.update_progress("Performing defense optimization...")
             optimized_defenses = self.core.optimize_defenses(selected_defenses)
-            self.start_main_pipeline(optimized_attacks, selected_defenses)
+            self.start_main_pipeline(optimized_attacks, optimized_defenses)
 
 
     def run_ui(self):
@@ -43,11 +45,14 @@ class Controller:
         
         self.ui.update_progress("Performing benign evaluation...")
         clean_metrics = self.core.perform_benign_evaluation()
-        self.ui.update_progress("perform_attacks...")
+        if len(attacks) != 0:
+            self.ui.update_progress("perform_attacks...")
         metrics_att, adv_examples = self.core.perform_attacks(attacks)
-        self.ui.update_progress("perform_defenses...")
+        if len(defenses) != 0:
+            self.ui.update_progress("perform_defenses...")
         metrics_deff, defended_examples = self.core.perform_defenses(defenses)
-        self.ui.update_progress("perform_defenses_on_attacks...")
+        if len(defenses) != 0:
+            self.ui.update_progress("perform_defenses_on_attacks...")
         metrics_att_def, adv_defended_examples = self.core.perform_defenses_on_attacks(defenses,adv_examples)
         self.ui.update_progress("DONE!", True)
         print(40*"-")
