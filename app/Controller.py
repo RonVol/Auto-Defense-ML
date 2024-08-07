@@ -49,7 +49,7 @@ class Controller:
         metrics_deff, defended_examples = self.core.perform_defenses(defenses)
         self.ui.update_progress("perform_defenses_on_attacks...")
         metrics_att_def, adv_defended_examples = self.core.perform_defenses_on_attacks(defenses,adv_examples)
-        self.ui.update_progress("DONE!")
+        self.ui.update_progress("DONE!", True)
         print(40*"-")
         print(clean_metrics)
         print(40*"-")
