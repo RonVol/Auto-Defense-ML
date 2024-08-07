@@ -189,6 +189,8 @@ class Main_UI:
                                 dpg.add_separator()
 
             dpg.add_separator()
+            self.param_config_option = dpg.add_radio_button(["Run on Default Parameters", 
+                                                                    "Optimize Attack and Defense Parameters"],horizontal=False)
             dpg.add_button(label="Begin Run", callback=self.on_proceed_with_selection_manual_config)
             dpg.add_button(label="back",callback=self.back_to_selection)
         
@@ -222,38 +224,45 @@ class Main_UI:
     def on_proceed_with_selection_manual_config(self):
         # Gather updated configurations for attacks
         updated_attacks_config = []
-        for attack_config in self.selected_attacks:
-            # Initially copy essential attributes
-            updated_config = {key: attack_config[key] for key in ["name", "type", "applicable_to"]}
-            # Update each parameter with the new value from the input field
-            for param, value in attack_config.items():
-                if param not in updated_config:  # Exclude already copied essential attributes
-                    input_value = dpg.get_value(f"{attack_config['name']}_{param}")
-                    # Convert the input value back to the appropriate type (int, float, bool)
-                    original_type = type(value)
-                    updated_config[param] = original_type(input_value) if input_value else value  # Fallback to original value if input is empty
-            updated_attacks_config.append(updated_config)
-        
-        # Similarly, gather updated configurations for defenses
-        updated_defenses_config = []
-        for defense_config in self.selected_defenses:
-            # Initially copy essential attributes
-            updated_config = {key: defense_config[key] for key in ["name", "applicable_to"]}
-            for param, value in defense_config.items():
-                if param not in updated_config:  # Exclude already copied essential attributes
-                    input_value = dpg.get_value(f"{defense_config['name']}_{param}")
-                    original_type = type(value)
-                    updated_config[param] = original_type(input_value) if input_value else value  # Fallback to original value if input is empty
-            updated_defenses_config.append(updated_config)
+        try:
+            for attack_config in self.selected_attacks:
+                # Initially copy essential attributes
+                updated_config = {key: attack_config[key] for key in ["name", "type", "applicable_to"]}
+                # Update each parameter with the new value from the input field
+                for param, value in attack_config.items():
+                    if param not in updated_config:  # Exclude already copied essential attributes
+                        input_value = dpg.get_value(f"{attack_config['name']}_{param}")
+                        # Convert the input value back to the appropriate type (int, float, bool)
+                        original_type = type(value)
+                        updated_config[param] = original_type(input_value)  # Fallback to original value if input is empty
+                        print(updated_config[param])
+                updated_attacks_config.append(updated_config)
+            
+            # Similarly, gather updated configurations for defenses
+            updated_defenses_config = []
+            for defense_config in self.selected_defenses:
+                # Initially copy essential attributes
+                updated_config = {key: defense_config[key] for key in ["name", "applicable_to"]}
+                for param, value in defense_config.items():
+                    if param not in updated_config:  # Exclude already copied essential attributes
+                        input_value = dpg.get_value(f"{defense_config['name']}_{param}")
+                        original_type = type(value)
+                        updated_config[param] = original_type(input_value) if input_value else value  # Fallback to original value if input is empty
+                updated_defenses_config.append(updated_config)
         
         # Now call the controller's handle_configuration method with these updated configurations
-        if self.controller:
-            dpg.hide_item("Configure Parameters")
-            self.show_progress_window()
-            self.controller.handle_configuration(updated_attacks_config, updated_defenses_config, 1)  # Adjusted to denote manual configuration
+            selected_option = dpg.get_value(self.param_config_option)
+            if(selected_option == ""):# if nothing is selected by clicking string is empty instead of default run
+                selected_option = "Run on Default Parameters"
+            if self.controller:
+                dpg.hide_item("Configure Parameters")
+                self.show_progress_window()
+                self.controller.handle_configuration(updated_attacks_config, updated_defenses_config, 1 if selected_option == "Run on Default Parameters" else 2)  # Adjusted to denote manual configuration
 
-        else:
-            print("Controller not set!")
+            else:
+                print("Controller not set!")
+        except Exception as e:
+            self.create_popup(e,"Configure Parameters")
 
     def show_progress_window(self):
         with dpg.window(label="Pipeline Progress", tag="progress_window", width=1280, height=720, no_move=True):
@@ -393,11 +402,15 @@ class Main_UI:
 
     def select_all(self, select, items, prefix):
         for item in items:
-            dpg.set_value(f"{prefix}{item}", select)
+            supported_lib = items[item]["applicable_to"]
+            if dpg.get_value(self.library_id) in supported_lib:
+                dpg.set_value(f"{prefix}{item}", select)
     
     def back_to_selection(self):
         dpg.hide_item("Configure Parameters")
         dpg.show_item("Select Attacks and Defenses")
+        dpg.delete_item("Configure Parameters")
+        self.setup_attack_defense_window()
 
     def load_files(self):
         model_path = dpg.get_value(self.model_path_id)
