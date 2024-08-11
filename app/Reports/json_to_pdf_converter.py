@@ -218,7 +218,6 @@ class Json_To_Pdf:
 
         doc = SimpleDocTemplate(self.output_pdf, pagesize=letter)
         self.styles = getSampleStyleSheet()
-        self.styles = getSampleStyleSheet()
         content = []
 
         title = Paragraph("<b>Evaluation Report:</b>", self.styles["Title"])
@@ -300,7 +299,7 @@ class Json_To_Pdf:
             title = Paragraph("<b>Recommendations:</b>", self.styles["Title"])
             content.append(title)
             content.append(Spacer(1, 12))
-            content.append(Paragraph("According to the Results of the automation:\n", self.styles["BodyText"]))
+            content.append(Paragraph("According to the Results of the automation:\n", self.styles["Heading2"]))
         
             for key in merged_dict.keys():
                 #print("\n")
@@ -320,6 +319,9 @@ class Json_To_Pdf:
                 for outer_key, inner_dict in results.items()
             }
             recc = {}
+            sugs = {}
+            for defence in self.defenses:
+                sugs[defence] = []
             for outer_key, inner_dict in suggested.items():
                 suggestion = []
                 better_than_the_rest = False
@@ -337,39 +339,77 @@ class Json_To_Pdf:
                                 suggestion.append(method)
                 #print("\n")
                 #print("suggestion:", suggestion)
-                #print("recc:", recc)
-                for method, val in recc.items():
-                    if len(val) == 1:
-                        val = val[0].strip("(\')").split(",")
-                        #print(val)
-                        content.append(Paragraph(f"The reccomended action is to use {val[0][:-2]} against {val[1][2:]}\n", self.styles["BodyText"]))
+            print("recc:", recc)
+            for method, val in recc.items():
+                if len(val) == 1:
+                    val = val[0].strip("(\')").split(",")
+                    val = [y.strip("\' ") for y in val]
+                    print("val:", val)
+                    sugs[val[0]].append((val[1], 1))
+                    print("sugs:", sugs)
+                    #content.append(Paragraph(f"The reccomended action is to use {val[0][:-2]} against {val[1][2:]}\n", self.styles["BodyText"]))
+                else:
+                    acc = [x[0] for x in results[method]["acc"] if x[0] != "Clean"]
+                    pres = [x[0] for x in results[method]["pres"] if x[0] != "Clean"]
+                    rec = [x[0] for x in results[method]["rec"] if x[0] != "Clean"]
+                    print("\n")
+                    print("acc:", acc)
+                    print("pres:", pres)
+                    print("rec:", rec)
+                    # index_counts = defaultdict(lambda: defaultdict(int))
+    
+                    # # Iterate over each list
+                    # for idx, lst in enumerate([acc, pres, rec]):
+                    #     # Iterate over each element in the list
+                    #     for i, elem in enumerate(lst):
+                    #         index_counts[i][elem] += 1  
+                    # for index, counts in index_counts.items():
+                    #     #print(f"At index {index}:")
+                    #     for elem, count in counts.keys():
+                    #         #print(f"Element {elem}: {count} times")
+
+                    comb = [x for x in results[method]["acc"] if x[0] not in self.defenses and x[0] not in self.attacks and x[0] != "Clean"]
+                    comb1 = [x for x in results[method]["pres"] if x[0] not in self.defenses and x[0] not in self.attacks and x[0] != "Clean"]
+                    comb2 = [x for x in results[method]["rec"] if x[0] not in self.defenses and x[0] not in self.attacks and x[0] != "Clean"]
+                    print("self.defences:", self.defenses)
+                    print("comb:", comb)
+                    print("comb1:", comb1)
+                    print("comb2:", comb2)
+
+                    if comb[0][1] > comb[1][1]:
+                        val1 = comb[0][0].strip("(\')").split(",")[0][:-1]
+                        val2 = comb[1][0].strip("(\')").split(",")[0][:-1]
+                        print(val1, val2)
+                        sugs[val1].append((method, 1))
+                        sugs[val2].append((method, 2))
+                        print(sugs)
+                        # content.append(Paragraph(f"The first reccomended action is to use{val1} against {method}\n", self.styles["BodyText"]))
+                        # content.append(Paragraph(f"The second reccomended action is to use {val2} against {method}\n", self.styles["BodyText"]))
                     else:
-                        acc = [x[0] for x in results[method]["acc"] if x[0] not in self.attacks and x[0] != "Clean"]
-                        pres = [x[0] for x in results[method]["pres"] if x[0] not in self.attacks and x[0] != "Clean"]
-                        rec = [x[0] for x in results[method]["rec"] if x[0] not in self.attacks and x[0] != "Clean"]
-                        #print(acc, pres, rec)
-                        # index_counts = defaultdict(lambda: defaultdict(int))
-        
-                        # # Iterate over each list
-                        # for idx, lst in enumerate([acc, pres, rec]):
-                        #     # Iterate over each element in the list
-                        #     for i, elem in enumerate(lst):
-                        #         index_counts[i][elem] += 1  
-                        # for index, counts in index_counts.items():
-                        #     #print(f"At index {index}:")
-                        #     for elem, count in counts.keys():
-                        #         #print(f"Element {elem}: {count} times")
-                        defence = [x for x in results[method]["acc"] if x[0] in self.defenses]
-                        #print(defence)
-                        comb = [x for x in results[method]["acc"] if x[0] not in self.defenses and x[0] not in self.attacks and x[0] != "Clean"]
-                            
-                        #print(comb[0], comb[1])#[results[method]["acc"].index(val1)][1])#,results[method]["acc"][results[method]["acc"].index(val2)][1])
-                        if comb[0][1] > comb[1][1]:
-                            val1 = comb[0][0].strip("(\')").split(",")[0][:-1]
-                            val2 = comb[1][0].strip("(\')").split(",")[0][:-1]
-                            ##print(val1, val2)
-                            content.append(Paragraph(f"The first reccomended action is to use{val1} against {method}\n", self.styles["BodyText"]))
-                            content.append(Paragraph(f"The second reccomended action is to use {val2} against {method}\n", self.styles["BodyText"]))
+                        val1 = comb[0][0].strip("(\')").split(",")[0][:-1]
+                        val2 = comb[1][0].strip("(\')").split(",")[0][:-1]
+                        print(val1, val2)
+                        sugs[val1].append((method, 2))
+                        sugs[val2].append((method, 1))
+                        print("sugs:", sugs)
+        s = {}
+        for key in sugs.keys():
+            s[key] = len(sugs[key])
+        print("s:", s)
+        content.append(Paragraph("These are the most recommended defences (in a decending order), and the attacks they have defended against successfully:\n", self.styles["Heading3"]))
+        for d in s.keys():
+            a = [x[0] for x in sugs[d]]
+            print("a:", a)
+            ms = ""
+            for m in a:
+                ms += f"{m}, "
+            ms = ms[:-2]
+            cov = int(len(a)/len(self.attacks)*100)
+            content.append(Paragraph(d))
+            content.append(Paragraph(f"The {d} defence has defended succesfully against {ms}", self.styles["BodyText"]))
+            content.append(Paragraph(f"The {d} defence has a {cov}% covrage rate against all the given attacks", self.styles["BodyText"]))
+            content.append(Paragraph("\n"))
+        print(self.attacks)
         doc.build(content)
         for filename in os.listdir(os.getcwd()):
             if filename.endswith('.png'):
