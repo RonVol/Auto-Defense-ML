@@ -18,6 +18,7 @@ class Controller:
         print("X Path:", x_path)
         print("Y Path:", y_path)
         dataloader, is_success, message = self.create_dataloader(model_path, selected_library, x_path, y_path)
+        print(f"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{dataloader}")
         print(message)
         self.dataloader = dataloader
         self.core.dataloader = self.dataloader
@@ -49,7 +50,7 @@ class Controller:
         metrics_deff, defended_examples = self.core.perform_defenses(defenses)
         self.ui.update_progress("perform_defenses_on_attacks...")
         metrics_att_def, adv_defended_examples = self.core.perform_defenses_on_attacks(defenses,adv_examples)
-        self.ui.update_progress("DONE!")
+        self.ui.update_progress("DONE!", True)
         print(40*"-")
         print(clean_metrics)
         print(40*"-")
@@ -58,7 +59,7 @@ class Controller:
         print(metrics_deff)
         print(40*"-")
         print(metrics_att_def)
-        # Extract parameter values
+        #Extract parameter values
         overall_accuracys = []
         overall_precisions = []
         overall_recalls = []
