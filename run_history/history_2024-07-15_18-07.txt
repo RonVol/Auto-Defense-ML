@@ -1,8 +1,0 @@
-model_path  :models/iris_xgboost.model
-model_library  :XGBoost
-x_path  :models/iris_xgboost_x_test.npy
-y_path  :models/iris_xgboost_y_test.npy
-
-attack_SamplingAttack
-SamplingAttack_eps  :0.1
-SamplingAttack_n_trials  :100
